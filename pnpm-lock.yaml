@@ -20,6 +20,9 @@ dependencies:
   aws-cdk-lib:
     specifier: ^2.85.0
     version: 2.85.0(constructs@10.2.62)
+  cdk-ecr-deployment:
+    specifier: ^2.5.24
+    version: 2.5.24(aws-cdk-lib@2.85.0)(constructs@10.2.62)
   cdktf:
     specifier: ^0.17.0
     version: 0.17.0(constructs@10.2.62)
@@ -1204,6 +1207,19 @@ packages:
   /case@1.6.3:
     resolution: {integrity: sha512-mzDSXIPaFwVDvZAHqZ9VlbyF4yyXRuX6IvB06WvPYkqJVO24kX1PPhv9bfpKNFZyxYFmmgo03HUiD8iklmJYRQ==}
     engines: {node: '>= 0.8.0'}
+
+  /cdk-ecr-deployment@2.5.24(aws-cdk-lib@2.85.0)(constructs@10.2.62):
+    resolution: {integrity: sha512-dPD6KUbJtZbc1R8RAPMFzV4AGmccuzfGUEA1e0+rD0n9UK3ErIAamlx5zH8jPjNo8U/cJfYIHBl8jcHO0KNDQw==}
+    peerDependencies:
+      aws-cdk-lib: ^2.0.0
+      constructs: ^10.0.5
+    dependencies:
+      aws-cdk-lib: 2.85.0(constructs@10.2.62)
+      constructs: 10.2.62
+    dev: false
+    bundledDependencies:
+      - got
+      - hpagent
 
   /cdktf-cli@0.17.0(ink@3.2.0)(react@17.0.2):
     resolution: {integrity: sha512-D2vZRtmFenYLDLUXF+uxuxUkJM3uYNce7Jn7/nWk/+qlcH/3n7TOEqV9UAgZFvjMLotGrA5/FIEDv4xse7sKRg==}

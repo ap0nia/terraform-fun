@@ -17,6 +17,7 @@
     "@cdktf/commons": "^0.17.0",
     "@cdktf/provider-docker": "^8.0.0",
     "aws-cdk-lib": "^2.85.0",
+    "cdk-ecr-deployment": "^2.5.24",
     "cdktf": "^0.17.0",
     "constructs": "^10.2.62"
   }
