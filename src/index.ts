@@ -32,9 +32,9 @@ async function start() {
 
   // await project.get()
 
-  await project.deploy()
+  // await project.deploy()
 
-  // await project.destroy()
+  await project.destroy()
 }
 
 start()
