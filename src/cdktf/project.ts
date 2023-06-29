@@ -5,9 +5,11 @@ import { Errors, ensureAllSettledBeforeThrowing } from '@cdktf/commons'
 import {
   getMultipleStacks,
   getStackWithNoUnmetDependencies,
+  checkIfAllDependantsAreIncluded,
   checkIfAllDependenciesAreIncluded,
+  getStackWithNoUnmetDependants,
   findAllNestedDependantStacks,
-} from '@cdktf/cli-core/src/lib/helpers/stack-helpers'
+} from '@cdktf/cli-core/src/lib/helpers/stack-helpers.js'
 import { CdktfStack } from '@cdktf/cli-core';
 import { getDirectories } from '../utils/directories.js';
 
@@ -43,17 +45,23 @@ export type AutoApproveOptions = {
   autoApprove?: boolean;
 };
 
-export type MutationOptions = MultipleStackOptions &
-  AutoApproveOptions & {
-    refreshOnly?: boolean;
-    ignoreMissingStackDependencies?: boolean;
-    parallelism?: number;
-    terraformParallelism?: number;
-    vars?: string[];
-    varFiles?: string[];
-    noColor?: boolean;
-    migrateState?: boolean;
-  };
+export type MutationOptions = MultipleStackOptions & AutoApproveOptions & {
+  refreshOnly?: boolean;
+  ignoreMissingStackDependencies?: boolean;
+  parallelism?: number;
+  terraformParallelism?: number;
+  vars?: string[];
+  varFiles?: string[];
+  noColor?: boolean;
+  migrateState?: boolean;
+};
+
+interface CdktfProjectOptions {
+  /**
+   * A function that will run and generate an output JSON.
+   */
+  synthFn?: () => unknown | Promise<unknown>;
+}
 
 /**
  * A simplfied, minimal adaptation of the official class.
@@ -64,23 +72,37 @@ export class CdktfProject {
 
   private stopAllStacksThatCanNotRunWithout: (stackName: string) => void = noop
 
-  async synth() {
-    const outdir = CONFIG_DEFAULTS.output;
+  public hardAbort: () => void;
 
-    if (!(fs.existsSync(path.join(outdir, Manifest.fileName)))) {
+  private abortSignal: AbortSignal;
+
+  private synthFn: () => unknown | Promise<unknown>;
+
+  constructor(options: CdktfProjectOptions = {}) {
+    this.synthFn = options.synthFn ?? noop;
+
+    const ac = new AbortController();
+    this.abortSignal = ac.signal;
+    this.hardAbort = ac.abort.bind(ac);
+  }
+
+  async synth(opts = CONFIG_DEFAULTS) {
+    await this.synthFn()
+
+    if (!(fs.existsSync(path.join(opts.output, Manifest.fileName)))) {
       throw new Error(
-        `ERROR: synthesis failed, because app was expected to call 'synth()', but didn't. Thus "${outdir}/${Manifest.fileName}"  was not created.`
+        `ERROR: synthesis failed, because app was expected to call 'synth()', but didn't. Thus "${opts.output}/${Manifest.fileName}"  was not created.`
       );
     }
 
     const manifest: ManifestJson = JSON.parse(
-      fs.readFileSync(path.join(outdir, Manifest.fileName)).toString()
+      fs.readFileSync(path.join(opts.output, Manifest.fileName)).toString()
     );
 
     const stacks: SynthesizedStack[] = Object.keys(manifest.stacks).map(stackName => {
       const stack = manifest.stacks[stackName];
 
-      const filePath = path.join(outdir, stack.synthesizedStackPath);
+      const filePath = path.join(opts.output, stack.synthesizedStackPath);
 
       const jsonContent: SynthesizedStackMetadata = JSON.parse(
         fs.readFileSync(filePath).toString()
@@ -88,7 +110,7 @@ export class CdktfProject {
 
       return {
         ...stack,
-        workingDirectory: path.join(outdir, stack.workingDirectory),
+        workingDirectory: path.join(opts.output, stack.workingDirectory),
         content: JSON.stringify(jsonContent, null, 2),
       }
     })
@@ -101,8 +123,7 @@ export class CdktfProject {
 
     const stackNames = stacks.map((s) => s.name);
 
-    const existingDirectories = getDirectories(path.join(outdir, Manifest.stacksFolder));
-
+    const existingDirectories = getDirectories(path.join(opts.output, Manifest.stacksFolder));
 
     const orphanedDirectories = existingDirectories.filter(
       (e) => !stackNames.includes(path.basename(e))
@@ -112,8 +133,11 @@ export class CdktfProject {
       fs.rmSync(orphanedDirectory, { recursive: true });
     }
 
-    // deploy
-    let opts = { stackNames, ignoreMissingStackDependencies: false }
+    return stacks
+  }
+
+  async deploy(opts: MutationOptions = {}) {
+    const stacks = await this.synth();
 
     const stacksToRun = getMultipleStacks(stacks, opts.stackNames, "deploy");
 
@@ -153,6 +177,62 @@ export class CdktfProject {
     if (unprocessedStacks.length > 0) {
       throw Errors.External(
         `Some stacks failed to deploy: ${unprocessedStacks
+          .map((s) => s.stack.name)
+          .join(", ")}. Please check the logs for more information.`
+      );
+    }
+  }
+
+  public async destroy(opts: MutationOptions = {}) {
+    const stacks = await this.synth();
+
+    const stacksToRun = getMultipleStacks(stacks, opts.stackNames, "destroy");
+
+    if (!opts.ignoreMissingStackDependencies) {
+      checkIfAllDependantsAreIncluded(stacksToRun, stacks);
+    }
+
+    this.stopAllStacksThatCanNotRunWithout = (stackName: string) => {
+      const stackExecutor = this.stacksToRun.find((s) => s.stack.name === stackName);
+
+      if (!stackExecutor) {
+        throw Errors.Internal(
+          `Could not find stack "${stackName}" that was stopped`
+        );
+      }
+
+      stackExecutor.stack.dependencies.forEach((dependant) => {
+        this.stopAllStacksThatCanNotRunWithout(dependant);
+
+        const dependantStack = this.stacksToRun.find(
+          (s) => s.stack.name === dependant
+        );
+
+        if (!dependantStack) {
+          throw Errors.Internal(
+            `Could not find stack "${dependant}" that was stopped`
+          );
+        }
+
+        dependantStack.stop();
+      });
+    };
+
+    this.stacksToRun = stacksToRun.map((stack) =>
+      this.getStackExecutor(stack, opts)
+    );
+
+    const next = opts.ignoreMissingStackDependencies
+      ? () => Promise.resolve(this.stacksToRun.filter((stack) => stack.currentState !== "done")[0])
+      : () => getStackWithNoUnmetDependants(this.stacksToRun);
+
+    await this.execute("destroy", next, opts);
+
+    const unprocessedStacks = this.stacksToRun.filter((executor) => executor.isPending);
+
+    if (unprocessedStacks.length > 0) {
+      throw Errors.External(
+        `Some stacks failed to destroy: ${unprocessedStacks
           .map((s) => s.stack.name)
           .join(", ")}. Please check the logs for more information.`
       );
@@ -207,6 +287,20 @@ export class CdktfProject {
     // We end the loop when all stacks are started, now we need to wait for them to be done.
     // We wait for all work to finish even if one of the promises threw an error.
     await ensureAllSettledBeforeThrowing(Promise.all(allExecutions), allExecutions);
+  }
+
+  public getStackExecutor(stack: SynthesizedStack, opts: AutoApproveOptions = {}) {
+    return new CdktfStack({
+      ...opts,
+      stack,
+      onUpdate(update) {
+        console.log({ update })
+        if (update.type === 'waiting for stack approval') {
+          update.approve()
+        }
+      },
+      abortSignal: this.abortSignal,
+    });
   }
 
   // Serially run terraform init to prohibit text file busy errors for the cache files
