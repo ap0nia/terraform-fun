@@ -1,6 +1,9 @@
 ---
 name: Deploy PR to staging
 
+on:
+  - push
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
