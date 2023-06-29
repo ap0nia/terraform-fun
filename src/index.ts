@@ -29,7 +29,10 @@ export class HelloCdkStack extends TerraformStack {
 
     const awsAdapter = new AwsTerraformAdapter(this, "adapter");
 
-    new S3Backend(this, { bucket: bucketName, key: 'terraform.tfstate' })
+    new S3Backend(this, { 
+      bucket: bucketName,
+      key: 'terraform.tfstate',
+    })
 
     new aws_s3.Bucket(awsAdapter, 'MyFirstBucket', {
       bucketName: `${name}-bucket`,
@@ -49,9 +52,9 @@ async function synthFn() {
 async function start() {
   const project = new CdktfProject({ synthFn });
 
-  // await project.deploy()
+  await project.deploy()
 
-  await project.destroy()
+  // await project.destroy()
 }
 
 start()
