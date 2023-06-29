@@ -19,6 +19,9 @@ jobs:
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
+        with:
+          # https://github.com/hashicorp/terraform-cdk/issues/1020
+          terraform_wrapper: false
 
       - name: Set up Node.js environment
         uses: actions/setup-node@v3
