@@ -32,6 +32,7 @@ async function start() {
 
   await project.deploy()
 
+
   // await project.destroy()
 }
 
