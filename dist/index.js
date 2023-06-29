@@ -1,0 +1,2 @@
+var n=async(o,l)=>(console.log(`Event: ${JSON.stringify(o,null,2)}`),console.log(`Context: ${JSON.stringify(l,null,2)}`),{statusCode:200,body:JSON.stringify({message:"hello world"})});export{n as handler};
+//# sourceMappingURL=index.js.map
