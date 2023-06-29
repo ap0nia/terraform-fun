@@ -151,11 +151,9 @@ export class CdktfProject {
     this.stacksToRun = stacksToRun.map((stack) => {
       return new CdktfStack({
         ...opts,
+        autoApprove: true,
         onUpdate(update) {
           console.log({ update })
-          if (update.type === 'waiting for stack approval') {
-            update.approve()
-          }
         },
         abortSignal: abortController.signal,
         stack,
@@ -308,12 +306,10 @@ export class CdktfProject {
   public getStackExecutor(stack: SynthesizedStack, opts: AutoApproveOptions = {}) {
     return new CdktfStack({
       ...opts,
+      autoApprove: true,
       stack,
       onUpdate(update) {
         console.log({ update })
-        if (update.type === 'waiting for stack approval') {
-          update.approve()
-        }
       },
       abortSignal: this.abortSignal,
     });
