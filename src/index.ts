@@ -1,8 +1,25 @@
 import { Construct } from "constructs";
 import aws_s3 from 'aws-cdk-lib/aws-s3';
-import { App, TerraformStack } from "cdktf";
+import { App, TerraformStack, S3Backend } from "cdktf";
 import { AwsTerraformAdapter, provider } from "@cdktf/aws-cdk";
 import { CdktfProject } from './cdktf/project.js'
+
+const bucketName = 'cdktf-state'
+
+/**
+ * Needs to exist first.
+ */
+export class CdktfStateStack extends TerraformStack {
+  constructor(scope: Construct, name: string) {
+    super(scope, name);
+
+    new provider.AwsProvider(this, 'aws', { region: 'us-east-1' })
+
+    const awsAdapter = new AwsTerraformAdapter(this, "adapter");
+
+    new aws_s3.Bucket(awsAdapter, 'MyFirstBucket', { bucketName, versioned: true });
+  }
+}
 
 export class HelloCdkStack extends TerraformStack {
   constructor(scope: Construct, name: string) {
@@ -12,9 +29,11 @@ export class HelloCdkStack extends TerraformStack {
 
     const awsAdapter = new AwsTerraformAdapter(this, "adapter");
 
+    new S3Backend(this, { bucket: bucketName, key: 'terraform.tfstate' })
+
     new aws_s3.Bucket(awsAdapter, 'MyFirstBucket', {
-      bucketName: 'my-first-bucket-in-terraform-is-so-epic',
-      versioned: true,
+      bucketName: `${name}-bucket`,
+      versioned: true
     });
   }
 }
@@ -32,7 +51,7 @@ async function start() {
 
   await project.deploy()
 
-  await project.destroy()
+  // await project.destroy()
 }
 
 start()
