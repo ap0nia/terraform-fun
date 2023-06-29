@@ -245,6 +245,7 @@ export class CdktfProject {
       new TerraformProviderConstraint({
         name: 'aws',
         source: 'hashicorp/aws',
+        version: '~> 4.0'
       })
     ]
 

@@ -30,7 +30,7 @@ async function synthFn() {
 async function start() {
   const project = new CdktfProject({ synthFn });
 
-  await project.get()
+  // await project.get()
 
   await project.deploy()
 
