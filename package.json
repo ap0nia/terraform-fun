@@ -2,8 +2,9 @@
   "name": "cdk",
   "type": "module",
   "scripts": {
-    "start": "tsx src/index.ts",
-    "build": "tsup"
+    "dev": "tsx src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js"
   },
   "devDependencies": {
     "@types/node": "^20.3.2",

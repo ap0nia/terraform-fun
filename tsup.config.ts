@@ -2,7 +2,7 @@ import { defineConfig } from 'tsup'
 
 export default defineConfig({
   entry: {
-    index: 'src/lambda.ts',
+    index: 'src/index.ts',
   },
   bundle: true,
   minify: true,
