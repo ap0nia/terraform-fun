@@ -28,8 +28,6 @@ async function synthFn() {
 }
 
 async function start() {
-  console.log('env: ', process.env)
-
   const project = new CdktfProject({ synthFn });
 
   await project.deploy()
