@@ -20,7 +20,6 @@ async function buildLambda() {
     entryPoints: ['src/lambda.ts'],
     bundle: true,
     minify: true,
-    sourcemap: true,
     platform: 'node',
     format: 'esm',
     target: 'esnext',
@@ -30,10 +29,31 @@ async function buildLambda() {
   })
 
   fs.mkdirSync('dist/lib/node_modules', { recursive: true })
-  fs.cpSync('node_modules/@cdktf/node-pty-prebuilt-multiarch/prebuilds', 'dist/prebuilds', { recursive: true })
-  fs.cpSync('node_modules/@cdktf/hcl2json/main.wasm.gz', 'dist/main.wasm.gz', { recursive: true })
-  fs.cpSync('node_modules/jsii', 'dist/lib/node_modules/jsii', { recursive: true })
-  fs.cpSync('node_modules/jsii-pacmak', 'dist/lib/node_modules/jsii-pacmak', { recursive: true })
+
+  fs.cpSync('node_modules/@cdktf/node-pty-prebuilt-multiarch/prebuilds', 'dist/prebuilds', { 
+    recursive: true 
+  })
+
+  fs.cpSync('node_modules/@cdktf/hcl2json/main.wasm.gz', 'dist/main.wasm.gz', {
+    recursive: true 
+  })
+
+  fs.cpSync('node_modules/jsii', 'dist/lib/node_modules/jsii', {
+    recursive: true,
+    dereference: true 
+  })
+
+  fs.cpSync('node_modules/jsii-pacmak', 'dist/lib/node_modules/jsii-pacmak', {
+    recursive: true,
+    dereference: true 
+  })
+
+  fs.rmSync('dist/prebuilds/win32-x64', {
+    recursive: true,
+    force: true 
+  })
+
+  fs.cpSync('package.json', 'dist/package.json')
 }
 
 
