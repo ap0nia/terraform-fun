@@ -25,15 +25,17 @@ export class HelloCdkStack extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
 
-    new provider.AwsProvider(this, 'aws', { region: 'us-east-1' })
-
-    const awsAdapter = new AwsTerraformAdapter(this, "adapter");
+    new provider.AwsProvider(this, 'aws', { 
+      region: process.env.AWS_REGION ?? 'us-east-1'
+    })
 
     new S3Backend(this, { 
       bucket: bucketName,
       key: 'terraform.tfstate',
       region: process.env.AWS_REGION ?? 'us-east-1'
     })
+
+    const awsAdapter = new AwsTerraformAdapter(this, "adapter");
 
     new aws_s3.Bucket(awsAdapter, 'MyFirstBucket', {
       bucketName: `${name}-bucket`,
@@ -45,7 +47,7 @@ export class HelloCdkStack extends TerraformStack {
 async function synthFn() {
   const app = new App();
 
-  new HelloCdkStack(app, "my-cdktf-aws-stack");
+  new HelloCdkStack(app, 'learn-cdktf-aws');
 
   app.synth();
 }

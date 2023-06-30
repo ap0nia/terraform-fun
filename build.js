@@ -17,7 +17,7 @@ async function buildLambda() {
   fs.rmSync('dist', { recursive: true, force: true })
 
   build({
-    entryPoints: ['src/index.ts'],
+    entryPoints: ['src/lambda.ts'],
     bundle: true,
     minify: true,
     sourcemap: true,
