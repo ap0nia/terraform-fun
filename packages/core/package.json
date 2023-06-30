@@ -14,6 +14,7 @@
     "@cdktf/aws-cdk": "^0.8.3",
     "@cdktf/cli-core": "^0.17.0",
     "@cdktf/commons": "^0.17.0",
+    "@cdktf/provider-aws": "^16.0.1",
     "@cdktf/provider-generator": "^0.17.0",
     "@octokit/action": "^6.0.4",
     "aws-cdk-lib": "^2.85.0",

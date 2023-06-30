@@ -41,6 +41,9 @@ importers:
       '@cdktf/commons':
         specifier: ^0.17.0
         version: 0.17.0
+      '@cdktf/provider-aws':
+        specifier: ^16.0.1
+        version: 16.0.1(cdktf@0.17.0)(constructs@10.2.62)
       '@cdktf/provider-generator':
         specifier: ^0.17.0
         version: 0.17.0
@@ -340,6 +343,17 @@ packages:
     dependencies:
       nan: 2.17.0
       prebuild-install: 7.1.1
+
+  /@cdktf/provider-aws@16.0.1(cdktf@0.17.0)(constructs@10.2.62):
+    resolution: {integrity: sha512-2Rwb3jRYTIxCvciWRpD3bbCtPmgdCvdYhNZhvl05pkHvayrPSOnK7gEzftxaqfPymxTbHZ1jEQ1mc4j6Y1K1vQ==}
+    engines: {node: '>= 16.14.0'}
+    peerDependencies:
+      cdktf: ^0.17.0
+      constructs: ^10.0.0
+    dependencies:
+      cdktf: 0.17.0(constructs@10.2.62)
+      constructs: 10.2.62
+    dev: false
 
   /@cdktf/provider-generator@0.17.0:
     resolution: {integrity: sha512-/Ei9uVuLT6xjJIn6hvGepmS7tOjOAYsUplpc3J2jS1US85aO7oMASgjjgISvDC7saddLqhYCfysSWrYU5zUp0g==}
