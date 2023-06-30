@@ -154,6 +154,9 @@ export class CdktfProject {
         onUpdate(update) {
           console.log({ update })
         },
+        onLog(log) {
+          console.log({ log })
+        },
         abortSignal: abortController.signal,
         stack,
       });
@@ -294,6 +297,9 @@ export class CdktfProject {
       stack,
       onUpdate(update) {
         console.log({ update })
+      },
+      onLog(log) {
+        console.log({ log })
       },
       abortSignal: this.abortSignal,
     });

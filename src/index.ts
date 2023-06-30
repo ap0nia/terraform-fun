@@ -9,17 +9,17 @@ const bucketName = 'cdktf-state'
 /**
  * Needs to exist first.
  */
-// export class CdktfStateStack extends TerraformStack {
-//   constructor(scope: Construct, name: string) {
-//     super(scope, name);
-// 
-//     new provider.AwsProvider(this, 'aws', { region: 'us-east-1' })
-// 
-//     const awsAdapter = new AwsTerraformAdapter(this, "adapter");
-// 
-//     new aws_s3.Bucket(awsAdapter, 'MyFirstBucket', { bucketName, versioned: true });
-//   }
-// }
+export class CdktfStateStack extends TerraformStack {
+  constructor(scope: Construct, name: string) {
+    super(scope, name);
+
+    new provider.AwsProvider(this, 'aws', { region: 'us-east-1' })
+
+    const awsAdapter = new AwsTerraformAdapter(this, "adapter");
+
+    new aws_s3.Bucket(awsAdapter, 'MyFirstBucket', { bucketName, versioned: true });
+  }
+}
 
 export class HelloCdkStack extends TerraformStack {
   constructor(scope: Construct, name: string) {
@@ -32,6 +32,7 @@ export class HelloCdkStack extends TerraformStack {
     new S3Backend(this, { 
       bucket: bucketName,
       key: 'terraform.tfstate',
+      region: process.env.AWS_REGION ?? 'us-east-1'
     })
 
     new aws_s3.Bucket(awsAdapter, 'MyFirstBucket', {
