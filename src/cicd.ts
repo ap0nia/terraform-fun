@@ -9,7 +9,12 @@ async function run() {
   const repo = github.context.repo.repo
   const ref = github.context.ref
 
-  const deployment = await octokit.request('POST /repos/{owner}/{repo}/deployments', { owner, repo, ref })
+  const deployment = await octokit.request('POST /repos/{owner}/{repo}/deployments', { 
+    owner,
+    repo,
+    ref,
+    required_contexts: []
+  })
 
   if (deployment.status !== 201) {
     throw new Error('Deployment failed')
