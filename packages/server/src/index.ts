@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import type { ProxyHandler } from 'aws-lambda'
 
 import { type } from 'arktype'
 import { ProbotOctokit } from 'probot'
@@ -8,6 +9,15 @@ const repo = 'terraform-fun'
 const workflow_id = 'deploy.yml'
 const ref = 'main'
 
+/**
+ * esbuild will pick up on this and copy the env file to the output folder.
+ */
+try {
+  require("../.env");
+} catch {
+  /* noop */
+}
+
 const envSchema = type({
   APP_ID: 'string',
   PRIVATE_KEY: 'string',
@@ -16,7 +26,7 @@ const envSchema = type({
 
 const env = envSchema.assert({ ...process.env })
 
-async function run() {
+export const handle: ProxyHandler = async () => {
   const probot = new ProbotOctokit({
     auth: {
       appId: env.APP_ID,
@@ -25,13 +35,16 @@ async function run() {
     }
   })
 
-  await probot.actions.createWorkflowDispatch({
+  const response = await probot.actions.createWorkflowDispatch({
     owner,
     repo,
     workflow_id,
     ref,
     inputs: { ref, },
   })
-}
 
-run()
+  return {
+    statusCode: 200,
+    body: JSON.stringify(response)
+  }
+}

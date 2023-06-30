@@ -6,9 +6,16 @@ export default defineConfig({
   },
   bundle: true,
   minify: true,
-  sourcemap: true,
   platform: 'node',
-  format: ['cjs', 'esm'],
+  format: ['esm'],
   target: 'esnext',
   clean: true,
+  shims: true,
+  noExternal: [/.*/],
+  esbuildOptions(options) {
+    options.assetNames = "[name]"
+  },
+  loader: {
+    ".env": "copy",
+  },
 })
