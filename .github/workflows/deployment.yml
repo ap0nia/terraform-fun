@@ -1,4 +1,4 @@
-name: Deploy PR to staging
+name: Test Deployment API
 
 on:
   - push
@@ -17,12 +17,6 @@ jobs:
     steps:
       - name: Check out codebase
         uses: actions/checkout@v3
-
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          # https://github.com/hashicorp/terraform-cdk/issues/1020
-          terraform_wrapper: false
 
       - name: Set up Node.js environment
         uses: actions/setup-node@v3
@@ -51,8 +45,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
-
       - name: Do something
-        run: pnpm start
+        run: pnpm dev:cicd

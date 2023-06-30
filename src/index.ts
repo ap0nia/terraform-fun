@@ -53,7 +53,7 @@ async function synthFn() {
 }
 
 async function start() {
-  // const project = new CdktfProject({ synthFn });
+  const project = new CdktfProject({ synthFn });
 
   // await project.deploy()
 
