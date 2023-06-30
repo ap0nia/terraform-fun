@@ -61,7 +61,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm build
+        run: pnpm --filter @klein/core build
 
       - name: Do something
-        run: pnpm start
+        run: pnpm --filter @klein/core start

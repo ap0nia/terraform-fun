@@ -50,4 +50,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Do something
-        run: pnpm dev:cicd
+        run: pnpm --filter @klein/core dev:cicd
