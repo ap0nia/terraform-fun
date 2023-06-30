@@ -1,63 +1,37 @@
-import { Construct } from "constructs";
-import aws_s3 from 'aws-cdk-lib/aws-s3';
-import { App, TerraformStack, S3Backend } from "cdktf";
-import { AwsTerraformAdapter, provider } from "@cdktf/aws-cdk";
-import { CdktfProject } from './cdktf/project.js'
+import 'dotenv/config'
 
-const bucketName = 'cdktf-state'
+import { type } from 'arktype'
+import { ProbotOctokit } from 'probot'
 
-/**
- * Needs to exist first.
- */
-export class CdktfStateStack extends TerraformStack {
-  constructor(scope: Construct, name: string) {
-    super(scope, name);
+const owner = 'ap0nia'
+const repo = 'terraform-fun'
+const workflow_id = 'deploy.yml'
+const ref = 'main'
 
-    new provider.AwsProvider(this, 'aws', { region: 'us-east-1' })
+const envSchema = type({
+  APP_ID: 'string',
+  PRIVATE_KEY: 'string',
+  INSTALLATION_ID: 'string',
+})
 
-    const awsAdapter = new AwsTerraformAdapter(this, "adapter");
+const env = envSchema.assert({ ...process.env })
 
-    new aws_s3.Bucket(awsAdapter, 'MyFirstBucket', { bucketName, versioned: true });
-  }
+async function run() {
+  const probot = new ProbotOctokit({
+    auth: {
+      appId: env.APP_ID,
+      privateKey: env.PRIVATE_KEY,
+      installationId: env.INSTALLATION_ID,
+    }
+  })
+
+  await probot.actions.createWorkflowDispatch({
+    owner,
+    repo,
+    workflow_id,
+    ref,
+    inputs: { ref, },
+  })
 }
 
-export class HelloCdkStack extends TerraformStack {
-  constructor(scope: Construct, name: string) {
-    super(scope, name);
-
-    new provider.AwsProvider(this, 'aws', { 
-      region: process.env.AWS_REGION ?? 'us-east-1'
-    })
-
-    new S3Backend(this, { 
-      bucket: bucketName,
-      key: 'terraform.tfstate',
-      region: process.env.AWS_REGION ?? 'us-east-1'
-    })
-
-    const awsAdapter = new AwsTerraformAdapter(this, "adapter");
-
-    new aws_s3.Bucket(awsAdapter, 'MyFirstBucket', {
-      bucketName: `${name}-bucket`,
-      versioned: true
-    });
-  }
-}
-
-async function synthFn() {
-  const app = new App();
-
-  new HelloCdkStack(app, 'learn-cdktf-aws');
-
-  app.synth();
-}
-
-async function start() {
-  const project = new CdktfProject({ synthFn });
-
-  // await project.deploy()
-
-  // await project.destroy()
-}
-
-start()
+run()
