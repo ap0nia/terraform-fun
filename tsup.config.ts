@@ -10,5 +10,6 @@ export default defineConfig({
   platform: 'node',
   format: ['cjs', 'esm'],
   target: 'esnext',
+  noExternal: [/.*/],
   clean: true,
 })
