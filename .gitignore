@@ -6,3 +6,4 @@ cdktf.log
 .gen
 .terraform
 *.zip
+.env
