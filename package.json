@@ -1,7 +1,7 @@
 {
   "name": "klein-stack",
+  "version": "0.0.0",
   "type": "module",
-  "scripts": {},
   "devDependencies": {
     "typescript": "^5.1.6"
   }

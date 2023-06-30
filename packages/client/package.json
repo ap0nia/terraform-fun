@@ -1,0 +1,9 @@
+{
+  "name": "@klein/client",
+  "version": "0.1.0",
+  "devDependencies": {
+    "@sveltejs/kit": "^1.21.0",
+    "svelte": "^4.0.1",
+    "vite": "^4.3.9"
+  }
+}
