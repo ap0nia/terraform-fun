@@ -1,7 +1,14 @@
 name: Deploy PR to staging
 
 on:
-  - push
+  push:
+
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'ref'
+        required: true
+        default: ${{github.sha}}
 
 jobs:
   deploy:
@@ -18,6 +25,8 @@ jobs:
     steps:
       - name: Check out codebase
         uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
