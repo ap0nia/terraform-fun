@@ -1,5 +1,9 @@
 name: Deploy PR to staging
 
+permissions:
+  deployments: read|write|none
+  statuses: read|write|none
+
 on:
   - push
 
