@@ -2,10 +2,10 @@ import cdktf from "cdktf";
 import aws from "@cdktf/provider-aws";
 import { Construct } from "constructs";
 import { TerraformAsset } from "../cdktf/asset.js";
-import { getWorkspaceRoot } from '../utils/directories.js'
+import { getProjectDirectory } from '../utils/directories.js'
 import { stateLockingDynamodbTable, stateBucket } from "./state.js";
 
-const workspaceRoot = getWorkspaceRoot(process.cwd())
+const projectDirectory = getProjectDirectory(process.cwd())
 
 const lambdaRolePolicy = {
   "Version": "2012-10-17",
@@ -38,7 +38,7 @@ export class MainStack extends cdktf.TerraformStack {
 
     // Create Lambda executable
     const lambdaAsset = new TerraformAsset(this, "lambda-asset", {
-      path: `${workspaceRoot}/packages/server/dist`,
+      path: `${projectDirectory}/dist`,
       type: cdktf.AssetType.ARCHIVE,
     });
 
@@ -55,10 +55,10 @@ export class MainStack extends cdktf.TerraformStack {
     });
 
     // Create Lambda function
-    const lambdaFunc = new aws.lambdaFunction.LambdaFunction(this, "learn-cdktf-lambda", {
+    const lambdaFunction = new aws.lambdaFunction.LambdaFunction(this, "learn-cdktf-lambda", {
       functionName: `learn-cdktf-${name}-lambda`,
       filename: lambdaAsset.path,
-      handler: 'index.handler',
+      handler: 'lambda.handler',
       runtime: 'nodejs18.x',
       role: role.arn,
       sourceCodeHash: lambdaAsset.assetHash,
@@ -68,14 +68,14 @@ export class MainStack extends cdktf.TerraformStack {
     const api = new aws.apigatewayv2Api.Apigatewayv2Api(this, "api-gw", {
       name: name,
       protocolType: "HTTP",
-      target: lambdaFunc.arn,
+      target: lambdaFunction.arn,
       corsConfiguration: {
         allowOrigins: ["*"],
       },
     });
 
     new aws.lambdaPermission.LambdaPermission(this, "apigw-lambda", {
-      functionName: lambdaFunc.functionName,
+      functionName: lambdaFunction.functionName,
       action: "lambda:InvokeFunction",
       principal: "apigateway.amazonaws.com",
       sourceArn: `${api.executionArn}/*/*`,

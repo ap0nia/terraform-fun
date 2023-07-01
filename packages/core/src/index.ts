@@ -26,7 +26,7 @@ export async function handleMainStack() {
   });
 
   await project.deploy()
-  await project.destroy()
+  // await project.destroy()
 }
 
 async function main() {
