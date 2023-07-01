@@ -59,6 +59,9 @@ importers:
       '@octokit/action':
         specifier: ^6.0.4
         version: 6.0.4
+      archiver:
+        specifier: ^5.3.1
+        version: 5.3.1
       aws-cdk-lib:
         specifier: ^2.85.0
         version: 2.85.0(constructs@10.2.62)
@@ -68,10 +71,13 @@ importers:
       constructs:
         specifier: ^10.2.62
         version: 10.2.62
-      glob:
-        specifier: ^10.3.1
-        version: 10.3.1
+      defu:
+        specifier: ^6.1.2
+        version: 6.1.2
     devDependencies:
+      '@types/archiver':
+        specifier: ^5.3.2
+        version: 5.3.2
       '@types/node':
         specifier: ^20.3.2
         version: 20.3.2
@@ -1520,6 +1526,12 @@ packages:
       - supports-color
     dev: true
 
+  /@types/archiver@5.3.2:
+    resolution: {integrity: sha512-IctHreBuWE5dvBDz/0WeKtyVKVRs4h75IblxOACL92wU66v+HGAfEYAOyXkOFphvRJMhuXdI9huDXpX0FC6lCw==}
+    dependencies:
+      '@types/readdir-glob': 1.1.1
+    dev: true
+
   /@types/aws-lambda@8.10.119:
     resolution: {integrity: sha512-Vqm22aZrCvCd6I5g1SvpW151jfqwTzEZ7XJ3yZ6xaZG31nUEOEyzzVImjRcsN8Wi/QyPxId/x8GTtgIbsy8kEw==}
     dev: true
@@ -1641,6 +1653,12 @@ packages:
   /@types/range-parser@1.2.4:
     resolution: {integrity: sha512-EEhsLsD6UsDM1yFhAvy0Cjr6VwmpMWqFBCb9w07wVugF7w9nfajxLuVmngTIpgS6svCnm6Vaw+MZhoDCKnOfsw==}
     dev: false
+
+  /@types/readdir-glob@1.1.1:
+    resolution: {integrity: sha512-ImM6TmoF8bgOwvehGviEj3tRdRBbQujr1N+0ypaln/GWjaerOB26jb93vsRHmdMtvVQZQebOlqt2HROark87mQ==}
+    dependencies:
+      '@types/node': 20.3.2
+    dev: true
 
   /@types/send@0.17.1:
     resolution: {integrity: sha512-Cwo8LE/0rnvX7kIIa3QHCkcuF21c05Ayb0ZfxPiv0W8VRiZiNW/WuRupHKpqqGVGf7SUA44QSOUKaEd9lIrd/Q==}
@@ -2517,6 +2535,10 @@ packages:
       has-property-descriptors: 1.0.0
       object-keys: 1.1.1
 
+  /defu@6.1.2:
+    resolution: {integrity: sha512-+uO4+qr7msjNNWKYPHqN/3+Dx3NFkmIzayk2L1MyZQlvgZb/J1A0fo410dpKrN2SnqFjt8n4JL8fDJE0wIgjFQ==}
+    dev: false
+
   /denque@1.5.1:
     resolution: {integrity: sha512-XwE+iZ4D6ZUB7mfYRMb5wByE8L74HCn30FBN7sWnXksWc1LO1bPDl67pBR9o/kC4z/xSNAwkMYcGgqDV3BE3Hw==}
     engines: {node: '>=0.10'}
@@ -2596,7 +2618,7 @@ packages:
     dependencies:
       semver: 7.5.3
       shelljs: 0.8.5
-      typescript: 5.2.0-dev.20230630
+      typescript: 5.2.0-dev.20230701
 
   /eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -5402,8 +5424,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  /typescript@5.2.0-dev.20230630:
-    resolution: {integrity: sha512-PpI4tXtyv86eAhapMWrJF5roAxswu022vmSjDRU7NzPqT5+DlBktIlDePOrBo7OUBWNVEiUfsWuoDNbq5Sjj6Q==}
+  /typescript@5.2.0-dev.20230701:
+    resolution: {integrity: sha512-ay607P1LNDtKi+hN0GEpsxsUa1g/3KGqzo1nvvcTPBvCz7xmxwcdZAdz8nJZh1JJdfu+6jBkAQ6XuKK08zvIUw==}
     engines: {node: '>=14.17'}
     hasBin: true
 

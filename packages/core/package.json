@@ -18,12 +18,14 @@
     "@cdktf/provider-generator": "^0.17.0",
     "@cdktf/provider-random": "^8.0.0",
     "@octokit/action": "^6.0.4",
+    "archiver": "^5.3.1",
     "aws-cdk-lib": "^2.85.0",
     "cdktf": "^0.17.0",
     "constructs": "^10.2.62",
-    "glob": "^10.3.1"
+    "defu": "^6.1.2"
   },
   "devDependencies": {
+    "@types/archiver": "^5.3.2",
     "@types/node": "^20.3.2",
     "cdktf-cli": "^0.17.0",
     "tsup": "^7.1.0",

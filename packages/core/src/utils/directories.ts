@@ -70,7 +70,7 @@ export function hasPackageJSON(root: string) {
 /**
  * Search up for the nearest `package.json`, i.e. the current project root.
  */
-export function searchForProjectDirectory(current: string, root = current): string {
+export function getProjectDirectory(current: string, root = current): string {
   if (hasPackageJSON(current)) return current;
 
   const currentDirectory = path.dirname(current);
@@ -78,15 +78,15 @@ export function searchForProjectDirectory(current: string, root = current): stri
   // reach the fs root
   if (!currentDirectory || currentDirectory === current) return root;
 
-  return searchForProjectDirectory(currentDirectory, root);
+  return getProjectDirectory(currentDirectory, root);
 }
 
 /**
  * Search up for the nearest workspace root.
  */
-export function searchForWorkspaceRoot(
+export function getWorkspaceRoot(
   current: string,
-  root = searchForProjectDirectory(current)
+  root = getProjectDirectory(current)
 ): string {
   if (hasRootFile(current)) return current;
   if (hasWorkspacePackageJSON(current)) return current;
@@ -96,5 +96,5 @@ export function searchForWorkspaceRoot(
   // reach the fs root
   if (!currentDirectory || currentDirectory === current) return root;
 
-  return searchForWorkspaceRoot(currentDirectory, root);
+  return getWorkspaceRoot(currentDirectory, root);
 }
