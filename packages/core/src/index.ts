@@ -1,79 +1,100 @@
+import cdktf from "cdktf";
+import aws from "@cdktf/provider-aws";
 import { Construct } from "constructs";
-import cdk from 'aws-cdk-lib'
-import { App, TerraformStack, TerraformResource } from "cdktf";
-import { AwsTerraformAdapter } from "@cdktf/aws-cdk";
-import { AwsProvider } from './cdktf/provider.js'
 import { CdktfProject } from './cdktf/project.js'
 import { searchForWorkspaceRoot } from './utils/directories.js'
 
-cdk.CfnElement
-
-const bucketName = 'cdktf-state'
-
-const functionName = 'hello-cdk'
-
 const workspaceRoot = searchForWorkspaceRoot(process.cwd())
 
-const directory = `${workspaceRoot}/packages/server`
+const lambdaRolePolicy = {
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+};
 
-const restApiName = `${bucketName}-api`
-
-export class HelloCdkStack extends TerraformStack {
+export class HelloCdkStack extends cdktf.TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
 
-    new AwsProvider(this, 'aws', {
-      region: process.env.AWS_REGION ?? 'us-east-1',
+    new cdktf.S3Backend(this, {
+      bucket: 'cdktf-state',
+      key: 'terraform.tfstate',
+      region: process.env.AWS_REGION ?? 'us-east-1'
     })
 
-    // new S3Backend(this, {
-    //   bucket: bucketName,
-    //   key: 'terraform.tfstate',
-    //   region: process.env.AWS_REGION ?? 'us-east-1'
-    // })
-
-    const awsAdapter = new AwsTerraformAdapter(this, "adapter");
-
-    const bucket = new cdk.aws_s3.Bucket(awsAdapter, "WidgetStore", {
-      bucketName: `${functionName}-lambda-handler-bucket`,
-      versioned: true,
+    new aws.provider.AwsProvider(this, "aws", {
+      region: process.env.AWS_REGION ?? "us-east-1",
     });
 
-    const handler = new cdk.aws_lambda.Function(awsAdapter, `${functionName}-handler`, {
-      code: cdk.aws_lambda.Code.fromAsset(directory, {
-        exclude: ['node_modules'],
-      }),
+    // Create Lambda executable
+    const asset = new cdktf.TerraformAsset(this, "lambda-asset", {
+      path: `${workspaceRoot}/packages/server`,
+      type: cdktf.AssetType.ARCHIVE,
+    });
+
+
+    // Create unique S3 bucket that hosts Lambda executable
+    const bucket = new aws.s3Bucket.S3Bucket(this, "bucket", {
+      bucketPrefix: `learn-cdktf-${name}`,
+    });
+
+    // Upload Lambda zip file to newly created S3 bucket
+    const lambdaArchive = new aws.s3Object.S3Object(this, "lambda-archive", {
+      bucket: bucket.bucket,
+      key: `hello-cdktf-server.zip`,
+      source: asset.path,
+    });
+
+    // Create Lambda role
+    const role = new aws.iamRole.IamRole(this, "lambda-exec", {
+      name: `learn-cdktf-server`,
+      assumeRolePolicy: JSON.stringify(lambdaRolePolicy)
+    });
+
+    // Add execution role for lambda to write to CloudWatch logs
+    new aws.iamRolePolicyAttachment.IamRolePolicyAttachment(this, "lambda-managed-policy", {
+      policyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+      role: role.name
+    });
+
+    // Create Lambda function
+    const lambdaFunc = new aws.lambdaFunction.LambdaFunction(this, "learn-cdktf-lambda", {
+      functionName: `learn-cdktf-${name}-lambda`,
+      s3Bucket: bucket.bucket,
+      s3Key: lambdaArchive.key,
       handler: 'dist/index.handler',
-      timeout: cdk.Duration.seconds(15),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
-      architecture: cdk.aws_lambda.Architecture.ARM_64,
-      memorySize: 512,
-      functionName,
-      environment: {
-        BUCKET: bucket.bucketName
-      },
-      
-    })
+      runtime: 'nodejs18.x',
+      role: role.arn,
+    });
 
-    bucket.grantReadWrite(handler)
+    // Create and configure API gateway
+    const api = new aws.apigatewayv2Api.Apigatewayv2Api(this, "api-gw", {
+      name: name,
+      protocolType: "HTTP",
+      target: lambdaFunc.arn
+    });
 
-    // const resource = new cdk.aws_apigateway.RestApi(awsAdapter, restApiName, {
-    //   defaultCorsPreflightOptions: {
-    //     allowOrigins: ["*"],
-    //     allowHeaders: ["Apollo-Require-Preflight", "Content-Type"],
-    //     allowMethods: ["GET", "HEAD", "POST"],
-    //   },
-    //   endpointTypes: [cdk.aws_apigateway.EndpointType.EDGE],
-    //   minCompressionSize: cdk.Size.bytes(128 * 1024), // 128 KiB
-    //   restApiName,
-    // })
+    new aws.lambdaPermission.LambdaPermission(this, "apigw-lambda", {
+      functionName: lambdaFunc.functionName,
+      action: "lambda:InvokeFunction",
+      principal: "apigateway.amazonaws.com",
+      sourceArn: `${api.executionArn}/*/*`,
+    });
 
-    // resource.root.addMethod('GET', new cdk.aws_apigateway.LambdaIntegration(handler))
+    new cdktf.TerraformOutput(this, 'url', { value: api.apiEndpoint });
   }
 }
 
 async function synthFn() {
-  const app = new App();
+  const app = new cdktf.App();
 
   new HelloCdkStack(app, 'learn-cdktf-aws');
 

@@ -1,13 +1,16 @@
 import 'dotenv/config'
-import type { ProxyHandler } from 'aws-lambda'
 
+import crypto from 'node:crypto'
 import { type } from 'arktype'
 import { ProbotOctokit } from 'probot'
+import type { ProxyHandler } from 'aws-lambda'
 
 const owner = 'ap0nia'
 const repo = 'terraform-fun'
 const workflow_id = 'deploy.yml'
 const ref = 'main'
+
+global.crypto ??= crypto
 
 /**
  * esbuild will pick up on this and copy the env file to the output folder.
@@ -26,7 +29,7 @@ const envSchema = type({
 
 const env = envSchema.assert({ ...process.env })
 
-export const handle: ProxyHandler = async () => {
+export const handler: ProxyHandler = async () => {
   const probot = new ProbotOctokit({
     auth: {
       appId: env.APP_ID,

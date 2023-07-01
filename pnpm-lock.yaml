@@ -47,6 +47,9 @@ importers:
       '@cdktf/provider-generator':
         specifier: ^0.17.0
         version: 0.17.0
+      '@cdktf/provider-random':
+        specifier: ^8.0.0
+        version: 8.0.0(cdktf@0.17.0)(constructs@10.2.62)
       '@octokit/action':
         specifier: ^6.0.4
         version: 6.0.4
@@ -368,6 +371,17 @@ packages:
     transitivePeerDependencies:
       - debug
       - supports-color
+
+  /@cdktf/provider-random@8.0.0(cdktf@0.17.0)(constructs@10.2.62):
+    resolution: {integrity: sha512-acVp0V/twKHwkWSGh05xxMkFEDx/tm6i46s/7ciuJrJfiJmWMcCb0BG8/csiLaK/E/hsCeoFQL0wHj5ncZF/wQ==}
+    engines: {node: '>= 16.14.0'}
+    peerDependencies:
+      cdktf: ^0.17.0
+      constructs: ^10.0.0
+    dependencies:
+      cdktf: 0.17.0(constructs@10.2.62)
+      constructs: 10.2.62
+    dev: false
 
   /@esbuild-kit/cjs-loader@2.4.2:
     resolution: {integrity: sha512-BDXFbYOJzT/NBEtp71cvsrGPwGAMGRB/349rwKuoxNSiKjPraNNnlK6MIIabViCjqZugu6j+xeMDlEkWdHHJSg==}
