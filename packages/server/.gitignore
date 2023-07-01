@@ -1,9 +1,0 @@
-node_modules/
-dist/
-cdktf.out/
-cdktf.log
-*terraform.*.tfstate*
-.gen
-.terraform
-*.zip
-.env
