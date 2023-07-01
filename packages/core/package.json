@@ -20,7 +20,8 @@
     "@octokit/action": "^6.0.4",
     "aws-cdk-lib": "^2.85.0",
     "cdktf": "^0.17.0",
-    "constructs": "^10.2.62"
+    "constructs": "^10.2.62",
+    "glob": "^10.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.3.2",
