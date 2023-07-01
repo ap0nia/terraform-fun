@@ -10,7 +10,7 @@ const repo = 'terraform-fun'
 const workflow_id = 'deploy.yml'
 const ref = 'main'
 
-global.crypto ??= crypto
+global.crypto ??= crypto as any
 
 /**
  * esbuild will pick up on this and copy the env file to the output folder.
