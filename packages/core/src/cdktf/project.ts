@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { Manifest, type StackManifest, type TerraformStackMetadata } from "cdktf";
-import { Errors, ensureAllSettledBeforeThrowing } from '@cdktf/commons'
+import { Errors, TerraformDependencyConstraint, TerraformProviderConstraint, ensureAllSettledBeforeThrowing } from '@cdktf/commons'
 import {
   getMultipleStacks,
   getStackWithNoUnmetDependencies,
@@ -12,6 +12,7 @@ import {
 } from '@cdktf/cli-core/src/lib/helpers/stack-helpers.js'
 import { CdktfStack } from '@cdktf/cli-core';
 import { getDirectories } from '../utils/directories.js';
+import { DEFAULT_CONSTRUCTS_OPTIONS, get } from './get.js';
 
 function noop() { }
 
@@ -238,6 +239,21 @@ export class CdktfProject {
           .join(", ")}. Please check the logs for more information.`
       );
     }
+  }
+
+  async get() {
+    const constraints: TerraformDependencyConstraint[] = [
+      new TerraformProviderConstraint({
+        name: 'aws',
+        source: 'hashicorp/aws',
+        version: '5.6.2'
+      })
+    ]
+
+    get({
+      constraints,
+      constructsOptions: DEFAULT_CONSTRUCTS_OPTIONS,
+    })
   }
 
   async execute(method: ExecutionMethod, next: CdktfStackMiddleware, opts: MutationOptions) {
