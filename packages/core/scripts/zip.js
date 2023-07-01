@@ -9,15 +9,11 @@ import archiver from 'archiver'
  * @param {import('./zip.d.ts').ZipOptions} options
  */
 export async function zipFolder(inputPath, outputPath, options = {}) {
-  const absoluteInputPath = path.resolve(inputPath)
-  const parentDirectory = path.dirname(path.dirname((absoluteInputPath)))
-  const directoryToZip = path.relative(parentDirectory, absoluteInputPath)
-
   const globOptions = defu(options.glob, {
-    cwd: parentDirectory
+    cwd: inputPath
   })
 
-  console.log({ directoryToZip, parentDirectory, options, globOptions })
+  // console.log({ directoryToZip, parentDirectory, options, globOptions })
 
   const output = fs.createWriteStream(outputPath);
 
@@ -28,9 +24,9 @@ export async function zipFolder(inputPath, outputPath, options = {}) {
 
     archive.pipe(output);
 
-    archive.on('entry', (entry) => {
-      console.log('entry: ', entry)
-    })
+    // archive.on('entry', (entry) => {
+    //   console.log('entry: ', entry)
+    // })
 
     archive.on("close", () => {
       resolve(outputPath);
@@ -40,7 +36,7 @@ export async function zipFolder(inputPath, outputPath, options = {}) {
       reject(err);
     });
 
-    archive.glob(directoryToZip + '/**/*.*', globOptions, options.data);
+    archive.glob(['**', '**/.*'], globOptions, options.data);
 
     archive.finalize();
   });

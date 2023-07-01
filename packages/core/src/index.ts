@@ -26,7 +26,7 @@ export class HelloCdkStack extends cdktf.TerraformStack {
     super(scope, name);
 
     new cdktf.S3Backend(this, {
-      bucket: 'cdktf-state',
+      bucket: 'cdktf-state-elysia',
       key: 'terraform.tfstate',
       region: process.env.AWS_REGION ?? 'us-east-1'
     })
@@ -37,7 +37,7 @@ export class HelloCdkStack extends cdktf.TerraformStack {
 
     // Create Lambda executable
     const lambdaAsset = new TerraformAsset(this, "lambda-asset", {
-      path: `${workspaceRoot}/packages/server`,
+      path: `${workspaceRoot}/packages/server/dist`,
       type: cdktf.AssetType.ARCHIVE,
     });
 
@@ -57,7 +57,7 @@ export class HelloCdkStack extends cdktf.TerraformStack {
     const lambdaFunc = new aws.lambdaFunction.LambdaFunction(this, "learn-cdktf-lambda", {
       functionName: `learn-cdktf-${name}-lambda`,
       filename: lambdaAsset.path,
-      handler: 'dist/index.handler',
+      handler: 'index.handler',
       runtime: 'nodejs18.x',
       role: role.arn,
       sourceCodeHash: lambdaAsset.assetHash,
@@ -93,9 +93,9 @@ async function synthFn() {
 }
 
 async function start() {
-  const project = new CdktfProject({ synthFn });
+  // const project = new CdktfProject({ synthFn });
 
-  await project.deploy()
+  // await project.deploy()
 
   // await project.destroy()
 }

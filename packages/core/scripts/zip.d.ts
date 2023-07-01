@@ -1,3 +1,5 @@
+import type archiver from 'archiver'
+
 export type GlobOptions = Parameters<archiver.Archiver['glob']>[1]
 
 export type ZipOptions = {
@@ -6,5 +8,5 @@ export type ZipOptions = {
    */
   glob?: GlobOptions,
 
-  data?: archiver.EntryData 
+  data?: Partial<archiver.EntryData>
 } 

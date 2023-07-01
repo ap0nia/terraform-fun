@@ -19,7 +19,7 @@ export default defineConfig({
   bundle: true,
   minify: true,
   platform: 'node',
-  format: ['esm'],
+  format: ['cjs'],
   target: 'esnext',
   clean: true,
   noExternal: [/.*/],

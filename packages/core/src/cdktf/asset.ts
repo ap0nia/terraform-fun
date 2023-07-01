@@ -3,8 +3,8 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf/lib/terraform-stack.js";
-import { addCustomSynthesis } from "cdktf/lib/synthesize/synthesizer";
 import type { ISynthesisSession } from "cdktf/lib/synthesize/types.js";
+import { addCustomSynthesis } from "cdktf/lib/synthesize/synthesizer.js";
 import { copySync, hashPath, findFileAboveCwd, } from "cdktf/lib/private/fs.js";
 import type { ZipOptions } from '../../scripts/zip.js'
 import { getProjectDirectory } from "../utils/directories.js";
@@ -76,9 +76,7 @@ export class TerraformAsset extends Construct {
     if (path.isAbsolute(config.path)) {
       this.sourcePath = config.path;
     } else {
-      const cdktfJsonPath =
-        scope.node.tryGetContext("cdktfJsonPath") ??
-        findFileAboveCwd("cdktf.json");
+      const cdktfJsonPath = scope.node.tryGetContext("cdktfJsonPath") ?? findFileAboveCwd("cdktf.json");
       if (cdktfJsonPath) {
         // Relative paths are always considered to be relative to cdktf.json, but operations are performed relative to process.cwd
         const absolutePath = path.resolve(
