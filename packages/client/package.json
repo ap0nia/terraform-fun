@@ -8,10 +8,23 @@
     "build": "vite build"
   },
   "devDependencies": {
-    "@sveltejs/adapter-static": "^2.0.2",
+    "@rollup/plugin-commonjs": "^25.0.2",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/pluginutils": "^5.0.2",
     "@sveltejs/kit": "^1.21.0",
+    "@types/aws-lambda": "^8.10.119",
+    "rollup": "^3.26.0",
     "svelte": "^4.0.1",
     "typescript": "^5.1.6",
     "vite": "^4.3.9"
+  },
+  "dependencies": {
+    "@aponia/sveltekit": "^1.0.5",
+    "@polka/url": "^0.5.0",
+    "aponia": "^1.0.8",
+    "aws-lambda": "^1.0.7",
+    "polka": "^0.5.2",
+    "sirv": "^2.0.3"
   }
 }

@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-static'
+import createAdapter from './src/lib/adapter/index.js'
 import { vitePreprocess } from '@sveltejs/kit/vite'
 
 /**
@@ -7,7 +7,7 @@ import { vitePreprocess } from '@sveltejs/kit/vite'
 const config = {
   preprocess: [ vitePreprocess() ],
   kit: {
-    adapter: adapter()
+    adapter: createAdapter()
   }
 }
 
