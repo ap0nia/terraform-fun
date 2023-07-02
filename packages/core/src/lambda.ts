@@ -1,16 +1,6 @@
 import 'dotenv/config'
 
-import crypto from 'node:crypto'
-import { type } from 'arktype'
-import { ProbotOctokit } from 'probot'
 import type { ProxyHandler } from 'aws-lambda'
-
-const owner = 'ap0nia'
-const repo = 'terraform-fun'
-const workflow_id = 'deploy.yml'
-const ref = 'main'
-
-global.crypto ??= crypto as any
 
 /**
  * esbuild will pick up on this and copy the env file to the output folder.
@@ -21,29 +11,22 @@ try {
   /* noop */
 }
 
-const envSchema = type({
-  APP_ID: 'string',
-  PRIVATE_KEY: 'string',
-  INSTALLATION_ID: 'string',
-})
-
-const env = envSchema.assert({ ...process.env })
-
 export const handler: ProxyHandler = async () => {
-  const probot = new ProbotOctokit({
-    auth: {
-      appId: env.APP_ID,
-      privateKey: env.PRIVATE_KEY,
-      installationId: env.INSTALLATION_ID,
-    }
-  })
+  const owner = 'ap0nia'
+  const repo = 'terraform-fun'
+  const authorization = ''
 
-  const response = await probot.actions.createWorkflowDispatch({
-    owner,
-    repo,
-    workflow_id,
-    ref,
-    inputs: { ref, },
+  const body = new FormData()
+  body.append('hub.mode', 'subscribe')
+  body.append('hub.topic', `https://github.com/${owner}/${repo}/events/issues.json`)
+  body.append('hub.callback', 'https://9be6-104-7-144-91.ngrok.io')
+
+  const response = await fetch('https://api.github.com/hub', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${authorization}`,
+    },
+    body
   })
 
   return {
@@ -51,3 +34,9 @@ export const handler: ProxyHandler = async () => {
     body: JSON.stringify(response)
   }
 }
+
+async function main() {
+  console.log('Starting...')
+}
+
+main()
