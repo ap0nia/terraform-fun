@@ -2,7 +2,7 @@ import { build } from 'esbuild'
 
 async function main() {
   build({
-    entryPoints: ['src/lambda.ts'],
+    entryPoints: ['src/infrastructure/lambda.ts'],
     bundle: true,
     platform: 'node',
     format: 'cjs',
