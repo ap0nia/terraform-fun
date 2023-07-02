@@ -13,7 +13,7 @@ export async function handleStateStack() {
   })
 
   await project.deploy()
-  await project.destroy()
+  // await project.destroy()
 }
 
 export async function handleMainStack() {

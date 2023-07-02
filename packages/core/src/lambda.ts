@@ -1,5 +1,3 @@
-import 'dotenv/config'
-
 import type { ProxyHandler } from 'aws-lambda'
 
 /**

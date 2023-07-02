@@ -1,6 +1,6 @@
 import cdktf from "cdktf";
-import aws from "@cdktf/provider-aws";
 import { Construct } from "constructs";
+import aws from "@cdktf/provider-aws";
 import { TerraformAsset } from "../cdktf/asset.js";
 import { getProjectDirectory } from '../utils/directories.js'
 import { stateLockingDynamodbTable, stateBucket } from "./state.js";
@@ -80,6 +80,18 @@ export class MainStack extends cdktf.TerraformStack {
       principal: "apigateway.amazonaws.com",
       sourceArn: `${api.executionArn}/*/*`,
     });
+
+    new aws.dynamodbTable.DynamodbTable(this, "dynamodb-table", {
+      name: "learn-cdktf-user-auth",
+      billingMode: "PAY_PER_REQUEST",
+      attribute: [
+        {
+          name: 'id',
+          type: 'S'
+        }
+      ],
+      hashKey: 'id',
+    })
 
     new cdktf.TerraformOutput(this, 'url', { value: api.apiEndpoint });
   }
