@@ -19,7 +19,7 @@ const staticFileBehavior: CloudfrontDistributionOrderedCacheBehavior = {
   allowedMethods: ['GET', 'HEAD', 'OPTIONS'],
   cachedMethods: ['GET', 'HEAD', 'OPTIONS'],
   cachePolicyId: CACHING_OPTIMIZED_POLICY_ID,
-  viewerProtocolPolicy: 'http-and-https',
+  viewerProtocolPolicy: 'allow-all',
   pathPattern: '~~placeholder~~',
   targetOriginId: '~~placeholder (S3 bucket)~~',
 }
@@ -70,9 +70,13 @@ export class SvelteKitStack extends cdktf.TerraformStack {
     /**
      * Create S3 bucket for storing static assets.
      */
-    const bucket = new aws.s3Bucket.S3Bucket(
+    const staticAssetsBucket = new aws.s3Bucket.S3Bucket(
       this,
-      `${name}-static-assets-bucket`
+      `${name}-static-assets-bucket`,
+      {
+        bucket: `${name}-static-assets`,
+        forceDestroy: true,
+      }
     )
 
     /**
@@ -87,13 +91,17 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       }
     );
 
+    const forEach = cdktf.TerraformIterator.fromList(cdktf.Fn.fileset(staticAssets.path, '**'))
+
     new aws.s3BucketObject.S3BucketObject(
       this,
       `${name}-static-assets-bucket-object`,
       {
-        bucket: bucket.bucket,
-        key: staticAssets.fileName,
-        source: staticAssets.path,
+        forEach,
+        bucket: staticAssetsBucket.bucket,
+        key: forEach.value,
+        source: `${staticAssets.path}/${forEach.value}`,
+        etag: cdktf.Fn.filemd5(`${staticAssets.path}/${forEach.value}`)
       }
     )
 
@@ -104,7 +112,7 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       this,
       `${name}-static-assets-bucket-versioning`,
       {
-        bucket: bucket.id,
+        bucket: staticAssetsBucket.id,
         versioningConfiguration: {
           status: 'Enabled'
         }
@@ -146,7 +154,11 @@ export class SvelteKitStack extends cdktf.TerraformStack {
         version: "2012-10-17",
         statement: [
           {
-            sid: "",
+            sid: "AllowLambdaToExecute",
+            effect: "Allow",
+            actions: [
+              "sts:AssumeRole"
+            ],
             principals: [
               {
                 type: "Service",
@@ -156,7 +168,6 @@ export class SvelteKitStack extends cdktf.TerraformStack {
                 ]
               }
             ],
-            effect: "Allow",
           }
         ]
       }
@@ -216,6 +227,14 @@ export class SvelteKitStack extends cdktf.TerraformStack {
         runtime: 'nodejs18.x',
         role: role.arn,
         sourceCodeHash: lambdaAtEdgeAsset.assetHash,
+        publish: true,
+
+        /**
+         * dev-intended strat: don't destroy ???
+         * @link https://github.com/hashicorp/terraform-provider-aws/issues/1721
+         * @link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-edge-delete-replicas.html
+         */
+        skipDestroy: true,
       }
     )
 
@@ -227,41 +246,31 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       `${name}-s3-origin-access-identity`,
     )
 
-    new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(
+    /**
+     * Create a function URL that can be used as an origin for CloudFront.
+     *
+     * {@link aws.lambdaFunctionUrl.LambdaFunctionUrl.functionUrl} is in the format:
+     *
+     * https://kcj2z34dbvosxjidwdh6i5zane0ckjvx.lambda-url.us-east-1.on.aws
+     *
+     * Need to get only domain name:
+     *
+     * kcj2z34dbvosxjidwdh6i5zane0ckjvx.lambda-url.us-east-1.on.aws
+     *
+     * @link https://github.com/aws/aws-cdk/issues/20090
+     */
+    const lambdaFunctionUrl = new aws.lambdaFunctionUrl.LambdaFunctionUrl(
       this,
-      `${name}-s3-bucket-policy-document`,
+      `${name}-lambda-function-url`,
       {
-        statement: [
-          {
-            sid: "1",
-            principals: [
-              { type: "AWS", identifiers: [s3OriginAccesIdentity.iamArn] }
-            ],
-            actions: ["s3:GetObject"]
-          }
-        ]
+        functionName: lambdaFunction.functionName,
+        authorizationType: 'NONE',
       }
     )
 
-    new aws.s3BucketPolicy.S3BucketPolicy(
-      this,
-      `${name}-s3-bucket-policy`,
-      {
-        bucket: bucket.id,
-        policy: JSON.stringify({
-          Version: "2012-10-17",
-          Statement: [
-            {
-              Sid: "Grant CloudFront access to S3 bucket",
-              Effect: "Allow",
-              Principal: {
-                AWS: s3OriginAccesIdentity.cloudfrontAccessIdentityPath
-              }
-            }
-          ]
-        })
-      }
-    )
+    const splitFunctionUrl = cdktf.Fn.split('/', lambdaFunctionUrl.functionUrl)
+
+    const functionUrlDomainName = cdktf.Fn.element(splitFunctionUrl, 2)
 
     /**
      * Create CloudFront distribution for proxying to all resources.
@@ -273,19 +282,26 @@ export class SvelteKitStack extends cdktf.TerraformStack {
         enabled: true,
         origin: [
           {
-            domainName: bucket.bucketRegionalDomainName,
-            originId: bucket.id,
+            originId: staticAssetsBucket.id,
+            domainName: staticAssetsBucket.bucketRegionalDomainName,
+            s3OriginConfig: {
+              originAccessIdentity: s3OriginAccesIdentity.cloudfrontAccessIdentityPath,
+            }
           },
           {
-            domainName: lambdaFunction.invokeArn,
             originId: lambdaFunction.id,
+            domainName: functionUrlDomainName,
+            customOriginConfig: {
+              httpPort: 80,
+              httpsPort: 443,
+              originProtocolPolicy: 'https-only',
+              originSslProtocols: ['TLSv1.2'],
+            },
           },
-          {
-            domainName: lambdaAtEdgeFunction.invokeArn,
-            originId: lambdaAtEdgeFunction.id,
-          }
         ],
-        viewerCertificate: {},
+        viewerCertificate: {
+          cloudfrontDefaultCertificate: true,
+        },
         restrictions: {
           geoRestriction: {
             restrictionType: 'none'
@@ -298,14 +314,14 @@ export class SvelteKitStack extends cdktf.TerraformStack {
         defaultCacheBehavior: {
           allowedMethods: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'POST', 'PATCH', 'DELETE'],
           cachedMethods: ['GET', 'HEAD', 'OPTIONS'],
-          targetOriginId: bucket.id,
+          targetOriginId: lambdaFunction.id,
           cachePolicyId: CACHING_DISABLED_POLICY_ID,
           originRequestPolicyId: ALL_VIEWER_EXCEPT_HOST_HEADER_POLICY_ID,
           viewerProtocolPolicy: 'redirect-to-https',
-          functionAssociation: [
+          lambdaFunctionAssociation: [
             {
               eventType: 'viewer-request',
-              functionArn: lambdaAtEdgeFunction.invokeArn
+              lambdaArn: lambdaAtEdgeFunction.qualifiedArn,
             },
           ]
         },
@@ -318,21 +334,62 @@ export class SvelteKitStack extends cdktf.TerraformStack {
           {
             ...staticFileBehavior,
             pathPattern: '_app/*',
-            targetOriginId: bucket.id,
+            targetOriginId: staticAssetsBucket.id,
           },
           {
             ...staticFileBehavior,
             pathPattern: 'favicon.png',
-            targetOriginId: bucket.id,
+            targetOriginId: staticAssetsBucket.id,
           },
           {
             ...staticFileBehavior,
             pathPattern: 'robots.txt',
-            targetOriginId: bucket.id,
+            targetOriginId: staticAssetsBucket.id,
           }
         ]
       },
     )
+
+    const s3CloudFrontPolicy = new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(
+      this,
+      `${name}-s3-bucket-policy-document`,
+      {
+        version: "2012-10-17",
+        statement: [
+          {
+            sid: "AllowCloudFrontServicePrincipal",
+            effect: "Allow",
+            actions: [
+              "s3:GetObject"
+            ],
+            principals: [
+              {
+                type: "AWS",
+                identifiers: [
+                  s3OriginAccesIdentity.iamArn
+                ]
+              }
+            ],
+            resources: [
+              `${staticAssetsBucket.arn}/*`
+            ],
+          }
+        ]
+      }
+    )
+
+    /**
+     * Attach the new policy to the bucket, allowing CloudFront to access it.
+     */
+    new aws.s3BucketPolicy.S3BucketPolicy(
+      this,
+      `${name}-s3-bucket-policy`,
+      {
+        bucket: staticAssetsBucket.id,
+        policy: s3CloudFrontPolicy.json,
+      }
+    )
+
 
     new cdktf.TerraformOutput(
       this,

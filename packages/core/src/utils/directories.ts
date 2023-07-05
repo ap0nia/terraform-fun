@@ -98,3 +98,14 @@ export function getWorkspaceRoot(
 
   return getWorkspaceRoot(currentDirectory, root);
 }
+
+/**
+ */
+export function getFilesRecursively(directory: string): string[] {
+  return fs.readdirSync(directory)
+    .map((name) => path.join(directory, name))
+    .flatMap((fileOrDirectory) => fs.statSync(fileOrDirectory).isDirectory()
+      ? getFilesRecursively(fileOrDirectory)
+      : fileOrDirectory
+    )
+};

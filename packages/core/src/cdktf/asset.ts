@@ -79,10 +79,7 @@ export class TerraformAsset extends Construct {
       const cdktfJsonPath = scope.node.tryGetContext("cdktfJsonPath") ?? findFileAboveCwd("cdktf.json");
       if (cdktfJsonPath) {
         // Relative paths are always considered to be relative to cdktf.json, but operations are performed relative to process.cwd
-        const absolutePath = path.resolve(
-          path.dirname(cdktfJsonPath),
-          config.path
-        );
+        const absolutePath = path.resolve(path.dirname(cdktfJsonPath), config.path);
         this.sourcePath = path.relative(process.cwd(), absolutePath);
       } else {
         throw new Error(
@@ -114,10 +111,7 @@ export class TerraformAsset extends Construct {
   }
 
   private get namedFolder(): string {
-    return path.posix.join(
-      ASSETS_DIRECTORY,
-      this.stack.getLogicalId(this.node)
-    );
+    return path.posix.join(ASSETS_DIRECTORY, this.stack.getLogicalId(this.node));
   }
 
   /**
@@ -125,6 +119,7 @@ export class TerraformAsset extends Construct {
    * Use this property to reference the asset
    */
   public get path(): string {
+    console.log(this.namedFolder, this.assetHash, this.type)
     return path.posix.join(
       this.namedFolder, // readable name
       this.assetHash, // hash depending on content so that path changes if content changes
