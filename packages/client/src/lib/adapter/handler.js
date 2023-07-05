@@ -3,11 +3,9 @@ import 'SHIMS';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
+import sirv from 'sirv';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
-import sirv from 'sirv';
-
 import { env, ENV_PREFIX } from './env.js';
 import { manifest, prerendered } from 'MANIFEST';
 import { Server } from 'SERVER';

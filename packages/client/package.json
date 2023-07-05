@@ -7,24 +7,23 @@
     "dev": "vite",
     "build": "vite build"
   },
+  "dependencies": {
+    "@ap0nia/sveltekit-adapter-node": "^0.1.3",
+    "@ap0nia/sveltekit-adapter-lambda": "^0.1.4",
+    "@aponia/sveltekit": "^1.0.5",
+    "@polka/url": "^1.0.0-next.21",
+    "aponia": "^1.0.8",
+    "aws-lambda": "^1.0.7",
+    "polka": "^1.0.0-next.22",
+    "sirv": "^2.0.3"
+  },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.2",
-    "@rollup/plugin-json": "^6.0.0",
-    "@rollup/plugin-node-resolve": "^15.1.0",
-    "@rollup/pluginutils": "^5.0.2",
+    "@sveltejs/adapter-node": "^1.3.0",
     "@sveltejs/kit": "^1.21.0",
     "@types/aws-lambda": "^8.10.119",
-    "rollup": "^3.26.0",
+    "esbuild": "^0.18.11",
     "svelte": "^4.0.1",
     "typescript": "^5.1.6",
     "vite": "^4.3.9"
-  },
-  "dependencies": {
-    "@aponia/sveltekit": "^1.0.5",
-    "@polka/url": "^0.5.0",
-    "aponia": "^1.0.8",
-    "aws-lambda": "^1.0.7",
-    "polka": "^0.5.2",
-    "sirv": "^2.0.3"
   }
 }

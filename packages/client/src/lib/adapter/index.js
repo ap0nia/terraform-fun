@@ -1,21 +1,27 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { readFile } from 'node:fs/promises';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { rollup } from 'rollup';
-import json from '@rollup/plugin-json';
-import commonjs from '@rollup/plugin-commonjs';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-import { createFilter, normalizePath } from '@rollup/pluginutils';
+import fs from 'node:fs'
+import url from 'node:url'
+import path from 'node:path'
+import esbuild from 'esbuild'
 
-/** @param {string} path */
-const resolve = (path) => fileURLToPath(new URL(path, import.meta.url));
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+
+/**
+ * @see https://github.com/evanw/esbuild/issues/1921#issuecomment-1491470829
+ */
+const js = `\
+import topLevelModule from 'node:module';
+const require = topLevelModule.createRequire(import.meta.url);
+`;
+
+/**
+ * Custom namespace for resolving virtual files.
+ */
+const namespace = 'sveltekit-virtual';
 
 /** @type {import('.').default} */
 function createAdapter(opts = {}) {
-  const { out = 'build', precompress, envPrefix = '', polyfill = true } = opts;
+  const { outdir = 'build', precompress, envPrefix = '', polyfill = true } = opts;
 
-  /** @type {import('@sveltejs/kit').Adapter} */
   const adapter = {
     name: '@sveltejs/adapter-node',
 
@@ -23,125 +29,109 @@ function createAdapter(opts = {}) {
      * @param {import('@sveltejs/kit').Builder} builder
      */
     async adapt(builder) {
-      // use an adjacent temporary directory so that any relative paths in eg. sourcemaps don't break
-      const tmp = path.join(path.dirname(builder.getServerDirectory()), 'adapter-node');
+      /**
+       * @example .svelte-kit/output/server/adapter-node
+       */
+      const temporaryDirectory = path.join(builder.getServerDirectory(), 'adapter-node');
 
-      builder.rimraf(out);
-      builder.rimraf(tmp);
-      builder.mkdirp(tmp);
+      /**
+       * Some SvelteKit thing that determines internal routing.
+       */
+      const manifest = `${temporaryDirectory}/manifest.js`;
+
+      /**
+       * The built SvelteKit server.
+       */
+      const server = `${temporaryDirectory}/index.js`;
+
+      builder.log.minor(`Cleaning ${outdir} and ${temporaryDirectory}`);
+
+      builder.rimraf(outdir);
+      builder.mkdirp(outdir);
+      builder.rimraf(temporaryDirectory);
+      builder.mkdirp(temporaryDirectory);
+
 
       builder.log.minor('Copying assets');
-      builder.writeClient(`${out}/client${builder.config.kit.paths.base}`);
-      builder.writePrerendered(`${out}/prerendered${builder.config.kit.paths.base}`);
+
+      builder.writeClient(`${outdir}/client/${builder.config.kit.paths.base}`);
+      builder.writePrerendered(`${outdir}/prerendered/${builder.config.kit.paths.base}`);
+
 
       if (precompress) {
         builder.log.minor('Compressing assets');
         await Promise.all([
-          builder.compress(`${out}/client`),
-          builder.compress(`${out}/prerendered`)
+          builder.compress(`${outdir}/client`),
+          builder.compress(`${outdir}/prerendered`)
         ]);
       }
 
+
       builder.log.minor('Building server');
 
-      builder.writeServer(tmp);
+      builder.writeServer(temporaryDirectory);
 
-      writeFileSync(
-        `${tmp}/manifest.js`,
+      // Dynamically create a manifest in the temporary directory.
+      fs.writeFileSync(
+        manifest,
         `export const manifest = ${builder.generateManifest({ relativePath: './' })};\n\n` +
         `export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
       );
 
-      const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
-
-      // we bundle the Vite output so that deployments only need
-      // their production dependencies. Anything in devDependencies
-      // will get included in the bundled code
-      const bundle = await rollup({
-        input: {
-          handler: resolve('./handler.js'),
-          index: resolve('./server.js')
+      await esbuild.build({
+        entryPoints: {
+          index: path.join(__dirname, 'server.js'),
+          handler: path.join(__dirname, 'handler.js'),
         },
-        external: [
-          // dependencies could have deep exports, so we need a regex
-          ...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
-        ],
+        bundle: true,
+        platform: 'node',
+        format: 'esm',
+        outdir,
+        banner: { js },
+        define: {
+          'import.meta.SERVER_DIR': JSON.stringify(url.pathToFileURL(outdir)),
+          'import.meta.ENV_PREFIX': JSON.stringify(envPrefix)
+        },
         plugins: [
           {
             name: 'adapter-node-resolve',
-            resolveId(id) {
-              switch (id) {
-                case 'MANIFEST':
-                  return `${tmp}/manifest.js`;
-                case 'SERVER':
-                  return `${tmp}/index.js`;
-                case 'SHIMS':
-                  return '\0virtual:SHIMS';
-              }
-            },
-            load(id) {
-              if (id === '\0virtual:SHIMS') {
-                return polyfill
-                  ? "import { installPolyfills } from '@sveltejs/kit/node/polyfills'; installPolyfills();"
-                  : '';
-              }
-            },
-            resolveImportMeta(property, { chunkId, moduleId }) {
-              if (property === 'SERVER_DIR' && moduleId === resolve('./handler.js')) {
-                const segments = chunkId.split('/').length - 1;
+            setup(build) {
+              build.onResolve({ filter: /SERVER/ }, () => {
+                return {
+                  path: server,
+                }
+              })
 
-                return `new URL("${'../'.repeat(segments) || '.'}", import.meta.url)`;
-              } else if (property === 'ENV_PREFIX' && moduleId === resolve('./env.js')) {
-                return JSON.stringify(envPrefix);
-              }
+              build.onResolve({ filter: /MANIFEST/ }, () => {
+                return {
+                  path: manifest,
+                }
+              })
+
+              build.onResolve({ filter: /SHIMS/ }, (args) => {
+                return {
+                  path: args.path,
+                  namespace
+                }
+              })
+
+              build.onLoad({ filter: /SHIMS/, namespace }, () => {
+                return {
+                  resolveDir: 'node_modules',
+                  contents: polyfill
+                    ? `import { installPolyfills } from '@sveltejs/kit/node/polyfills'; installPolyfills();`
+                    : '',
+                }
+              })
             }
-          },
-          nodeResolve({
-            preferBuiltins: true,
-            exportConditions: ['node']
-          }),
-          commonjs({ strictRequires: true }),
-          json(),
-          merge_sourcemap_plugin(tmp)
+          }
         ]
-      });
-
-      await bundle.write({
-        dir: out,
-        format: 'esm',
-        sourcemap: true,
-        chunkFileNames: 'server/chunks/[name]-[hash].js',
-        // without this rollup will insert some imports to try speed up
-        // module loading but it doesn't really affect anything on the server side
-        hoistTransitiveImports: false
-      });
+      })
     }
   };
 
   return adapter
 }
 
-/**
- * Load sourcemaps for files in the tmp directory so that the final ones
- * point to the original source files, instead of the generated files in outDir.
- * @param {string} tmp
- * @returns {import('rollup').Plugin}
- */
-function merge_sourcemap_plugin(tmp) {
-  const should_process_sourcemaps = createFilter(`${normalizePath(tmp)}/**/*.js`);
-
-  return {
-    name: 'adapter-node-sourcemap-loader',
-    async load(id) {
-      if (!should_process_sourcemaps(id)) return;
-      if (!existsSync(`${id}.map`)) return;
-      const [code, map] = await Promise.all([
-        readFile(id, 'utf-8'),
-        readFile(`${id}.map`, 'utf-8')
-      ]);
-      return { code, map };
-    }
-  };
-}
-
 export default createAdapter
+

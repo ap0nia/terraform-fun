@@ -1,5 +1,6 @@
-import createAdapter from './src/lib/adapter/index.js'
 import { vitePreprocess } from '@sveltejs/kit/vite'
+// import adapter from '@ap0nia/sveltekit-adapter-node'
+import adapter from '@ap0nia/sveltekit-adapter-lambda'
 
 /**
  * @type {import('@sveltejs/kit').Config}
@@ -7,7 +8,7 @@ import { vitePreprocess } from '@sveltejs/kit/vite'
 const config = {
   preprocess: [ vitePreprocess() ],
   kit: {
-    adapter: createAdapter()
+    adapter: adapter()
   }
 }
 

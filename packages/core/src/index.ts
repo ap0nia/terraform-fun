@@ -1,7 +1,7 @@
 import cdktf from "cdktf";
-import { MainStack } from './stacks/main.js'
 import { StateStack } from './stacks/state.js'
 import { CdktfProject } from './cdktf/project.js'
+import { SvelteKitStack } from './stacks/sveltekit.js'
 
 export async function handleStateStack() {
   const project = new CdktfProject({
@@ -20,7 +20,7 @@ export async function handleMainStack() {
   const project = new CdktfProject({
     synthFn() {
       const app = new cdktf.App();
-      new MainStack(app, 'learn-cdktf-aws');
+      new SvelteKitStack(app, 'sveltekit-sverdle');
       app.synth()
     },
   });
@@ -31,7 +31,7 @@ export async function handleMainStack() {
 
 async function main() {
   // handleStateStack()
-  // handleMainStack()
+  handleMainStack()
 }
 
 main()
