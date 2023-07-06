@@ -1,6 +1,6 @@
 import path from 'node:path'
 import cdktf from "cdktf";
-import { Construct } from "constructs";
+import type { Construct } from "constructs";
 import aws from "@cdktf/provider-aws";
 import type {
   CloudfrontDistributionOrderedCacheBehavior
@@ -8,6 +8,7 @@ import type {
 import { TerraformAsset } from "../cdktf/asset.js";
 import { getProjectDirectory } from '../utils/directories.js'
 import { stateLockingDynamodbTable, stateBucket } from "./state.js";
+import { fileTypesToContentTypes } from '../utils/fileTypes.js';
 
 const projectDirectory = path.join(getProjectDirectory(process.cwd()), '..', 'client')
 
@@ -91,42 +92,7 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       }
     );
 
-    const fileTypes = new cdktf.TerraformLocal(
-      this,
-      "file-types",
-      {
-        ".txt": "text/plain; charset=utf-8",
-        ".html": "text/html; charset=utf-8",
-        ".htm": "text/html; charset=utf-8",
-        ".xhtml": "application/xhtml+xml",
-        ".css": "text/css; charset=utf-8",
-        ".js": "application/javascript",
-        ".xml": "application/xml",
-        ".json": "application/json",
-        ".jsonld": "application/ld+json",
-        ".gif": "image/gif",
-        ".jpeg": "image/jpeg",
-        ".jpg": "image/jpeg",
-        ".png": "image/png",
-        ".svg": "image/svg+xml",
-        ".webp": "image/webp",
-        ".weba": "audio/webm",
-        ".webm": "video/webm",
-        ".3gp": "video/3gpp",
-        ".3g2": "video/3gpp2",
-        ".pdf": "application/pdf",
-        ".swf": "application/x-shockwave-flash",
-        ".atom": "application/atom+xml",
-        ".rss": "application/rss+xml",
-        ".ico": "image/vnd.microsoft.icon",
-        ".jar": "application/java-archive",
-        ".ttf": "font/ttf",
-        ".otf": "font/otf",
-        ".eot": "application/vnd.ms-fontobject",
-        ".woff": "font/woff",
-        ".woff2": "font/woff2",
-      }
-    )
+    const fileTypes = new cdktf.TerraformLocal(this, "file-types", fileTypesToContentTypes)
 
     const forEach = cdktf.TerraformIterator.fromList(cdktf.Fn.fileset(staticAssets.path, '**'))
 
