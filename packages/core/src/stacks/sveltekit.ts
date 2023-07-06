@@ -77,13 +77,14 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       {
         bucket: `${name}-static-assets`,
         forceDestroy: true,
+        objectLockEnabled: true,
       }
     )
 
     /**
      * Transfer the static assets to the S3 bucket.
      */
-    const staticAssets = new cdktf.TerraformAsset(
+    const staticAssets = new TerraformAsset(
       this,
       `${name}-static-assets-bucket-contents`,
       {
@@ -106,6 +107,7 @@ export class SvelteKitStack extends cdktf.TerraformStack {
         bucket: staticAssetsBucket.bucket,
         source: `${staticAssets.path}/${forEach.value}`,
         etag: cdktf.Fn.filemd5(`${staticAssets.path}/${forEach.value}`),
+        sourceHash: cdktf.Fn.filemd5(`${staticAssets.path}/${forEach.value}`),
         contentType: cdktf.Fn.lookup(
           fileTypes.fqn,
           cdktf.Fn.element(cdktf.Fn.regexall("\.[^\.]+$", forEach.value), 0),
@@ -234,8 +236,14 @@ export class SvelteKitStack extends cdktf.TerraformStack {
         handler: 'index.handler',
         runtime: 'nodejs18.x',
         role: role.arn,
-        sourceCodeHash: lambdaAtEdgeAsset.assetHash,
         publish: true,
+
+        /**
+         * Don't hash this since it generally shouldn't be modified.
+         * @link https://github.com/hashicorp/terraform-provider-aws/issues/17989
+         * Bug: if it's hashed, will always refresh. Which will take a long time because of CloudFront.
+         */
+        // sourceCodeHash: lambdaAtEdgeAsset.assetHash,
 
         /**
          * dev-intended strat: don't destroy ???

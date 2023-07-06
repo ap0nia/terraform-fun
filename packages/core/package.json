@@ -12,18 +12,15 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
-    "@cdktf/cli-core": "^0.17.0",
-    "@cdktf/commons": "^0.17.0",
-    "@cdktf/provider-aws": "^16.0.1",
+    "@cdktf/cli-core": "^0.17.1",
+    "@cdktf/commons": "^0.17.1",
+    "@cdktf/provider-aws": "^16.0.2",
     "archiver": "^5.3.1",
     "arktype": "1.0.14-alpha",
     "aws-lambda": "^1.0.7",
-    "cdktf": "^0.17.0",
+    "cdktf": "^0.17.1",
     "constructs": "^10.2.62",
-    "defu": "^6.1.2",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "mrmime": "^1.0.1"
+    "defu": "^6.1.2"
   },
   "devDependencies": {
     "@types/archiver": "^5.3.2",
