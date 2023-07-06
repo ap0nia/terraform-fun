@@ -135,9 +135,9 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       `${name}-static-assets-bucket-object`,
       {
         forEach,
-        bucket: staticAssetsBucket.bucket,
-        forceDestroy: true,
         key: forEach.value,
+        forceDestroy: true,
+        bucket: staticAssetsBucket.bucket,
         source: `${staticAssets.path}/${forEach.value}`,
         etag: cdktf.Fn.filemd5(`${staticAssets.path}/${forEach.value}`),
         contentType: cdktf.Fn.lookup(
@@ -157,7 +157,7 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       {
         bucket: staticAssetsBucket.id,
         versioningConfiguration: {
-          status: 'Enabled'
+          status: 'Enabled',
         }
       }
     )
