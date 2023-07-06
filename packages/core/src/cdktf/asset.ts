@@ -119,7 +119,6 @@ export class TerraformAsset extends Construct {
    * Use this property to reference the asset
    */
   public get path(): string {
-    console.log(this.namedFolder, this.assetHash, this.type)
     return path.posix.join(
       this.namedFolder, // readable name
       this.assetHash, // hash depending on content so that path changes if content changes

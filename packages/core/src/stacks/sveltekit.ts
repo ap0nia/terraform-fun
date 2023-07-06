@@ -91,17 +91,60 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       }
     );
 
+    const fileTypes = new cdktf.TerraformLocal(
+      this,
+      "file-types",
+      {
+        ".txt": "text/plain; charset=utf-8",
+        ".html": "text/html; charset=utf-8",
+        ".htm": "text/html; charset=utf-8",
+        ".xhtml": "application/xhtml+xml",
+        ".css": "text/css; charset=utf-8",
+        ".js": "application/javascript",
+        ".xml": "application/xml",
+        ".json": "application/json",
+        ".jsonld": "application/ld+json",
+        ".gif": "image/gif",
+        ".jpeg": "image/jpeg",
+        ".jpg": "image/jpeg",
+        ".png": "image/png",
+        ".svg": "image/svg+xml",
+        ".webp": "image/webp",
+        ".weba": "audio/webm",
+        ".webm": "video/webm",
+        ".3gp": "video/3gpp",
+        ".3g2": "video/3gpp2",
+        ".pdf": "application/pdf",
+        ".swf": "application/x-shockwave-flash",
+        ".atom": "application/atom+xml",
+        ".rss": "application/rss+xml",
+        ".ico": "image/vnd.microsoft.icon",
+        ".jar": "application/java-archive",
+        ".ttf": "font/ttf",
+        ".otf": "font/otf",
+        ".eot": "application/vnd.ms-fontobject",
+        ".woff": "font/woff",
+        ".woff2": "font/woff2",
+      }
+    )
+
     const forEach = cdktf.TerraformIterator.fromList(cdktf.Fn.fileset(staticAssets.path, '**'))
 
-    new aws.s3BucketObject.S3BucketObject(
+    new aws.s3Object.S3Object(
       this,
       `${name}-static-assets-bucket-object`,
       {
         forEach,
         bucket: staticAssetsBucket.bucket,
+        forceDestroy: true,
         key: forEach.value,
         source: `${staticAssets.path}/${forEach.value}`,
-        etag: cdktf.Fn.filemd5(`${staticAssets.path}/${forEach.value}`)
+        etag: cdktf.Fn.filemd5(`${staticAssets.path}/${forEach.value}`),
+        contentType: cdktf.Fn.lookup(
+          fileTypes.fqn,
+          cdktf.Fn.element(cdktf.Fn.regexall("\.[^\.]+$", forEach.value), 0),
+          "application/octet-stream"
+        ),
       }
     )
 
@@ -181,7 +224,6 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       this,
       `${name}-lambda-execution-role`,
       {
-        name: `lambda-server`,
         assumeRolePolicy: lambdaRoleDocument.json,
       }
     );
@@ -193,8 +235,8 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       this,
       `${name}-lambda-policy`,
       {
-        policyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
         role: role.name,
+        policyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
       }
     );
 
