@@ -18,6 +18,12 @@ const session = AponiaSession({
 const github = GitHub({
   clientId: CLIENT_ID,
   clientSecret: CLIENT_SECRET,
+  endpoints: {
+    authorization: {
+      url: "https://github.com/login/oauth/authorize",
+      params: { scope: "read:user user:email repo repo_deployment workflow" },
+    },
+  },
   onAuth(user, _context) {
     return { user, redirect: '/', status: 302 }
   },

@@ -11,9 +11,13 @@
     "@ap0nia/sveltekit-adapter-lambda": "^0.1.5",
     "@ap0nia/sveltekit-adapter-node": "^0.1.5",
     "@aponia/sveltekit": "^1.0.5",
+    "@octokit/auth-app": "^5.0.6",
+    "@octokit/auth-oauth-app": "^6.0.1",
+    "@octokit/oauth-app": "^5.0.0",
     "@polka/url": "^1.0.0-next.21",
     "aponia": "^1.0.8",
     "aws-lambda": "^1.0.7",
+    "octokit": "^2.1.0",
     "polka": "^1.0.0-next.22",
     "sirv": "^2.0.3",
     "tw-elements": "1.0.0-beta2"
