@@ -9,6 +9,19 @@
   <div class="flex flex-col gap-2">
     {#each data.deployments as deployment}
       <div class="bg-secondary p-2">
+        <p>
+          {deployment.environment}
+        </p>
+      </div>
+    {/each}
+  </div>
+</div>
+
+<div>
+  <h1>Deployments</h1>
+  <div class="flex flex-col gap-2">
+    {#each data.deployments as deployment}
+      <div class="bg-secondary p-2">
         <pre>
           {JSON.stringify(deployment, null, 2)}
         </pre>
