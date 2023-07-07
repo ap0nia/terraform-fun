@@ -2,7 +2,12 @@ import type { GitHubProfile } from 'aponia/providers/github'
 
 declare global {
   namespace Aponia {
-    interface User extends GitHubProfile { }
+    interface User extends GitHubProfile { 
+      /**
+       * The access token from the OAuth procedure.
+       */
+      accessToken: string
+    }
   }
 
   namespace App {

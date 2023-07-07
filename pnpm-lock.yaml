@@ -36,8 +36,8 @@ importers:
         specifier: ^1.0.0-next.21
         version: 1.0.0-next.21
       aponia:
-        specifier: ^1.0.8
-        version: 1.0.8
+        specifier: ^1.0.9
+        version: 1.0.9
       aws-lambda:
         specifier: ^1.0.7
         version: 1.0.7
@@ -214,7 +214,7 @@ packages:
       vite: ^4.2.1
     dependencies:
       '@sveltejs/kit': 1.21.0(svelte@4.0.1)(vite@4.3.9)
-      aponia: 1.0.8
+      aponia: 1.0.9
       cookie: 0.5.0
       svelte: 4.0.1
       vite: 4.3.9
@@ -1747,8 +1747,8 @@ packages:
       normalize-path: 3.0.0
       picomatch: 2.3.1
 
-  /aponia@1.0.8:
-    resolution: {integrity: sha512-dwGE037DIEH7+0H6ZAiBkxRUUoDlwx3xMqBsuEsjhfZTIhpwSyj2ss66nHA9qhEoqtRAosmOozEWShBhTx50nQ==}
+  /aponia@1.0.9:
+    resolution: {integrity: sha512-OOHv82OvyBu35ESa/VECel/jmp2NNGe9uQsoZMpVDw7EDpJ2T9hImp0tRSEqN3jQ9a+TsRjP6cd7Xl30jkmqyQ==}
     dependencies:
       '@panva/hkdf': 1.1.1
       cookie: 0.5.0

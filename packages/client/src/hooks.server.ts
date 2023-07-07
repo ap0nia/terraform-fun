@@ -21,11 +21,15 @@ const github = GitHub({
   endpoints: {
     authorization: {
       url: "https://github.com/login/oauth/authorize",
-      params: { scope: "read:user user:email repo repo_deployment workflow" },
+      params: { scope: "repo workflow" },
     },
   },
-  onAuth(user, _context) {
-    return { user, redirect: '/', status: 302 }
+  onAuth(user, tokens) {
+    return { 
+      user: { ...user, accessToken: tokens.access_token}, 
+      redirect: '/', 
+      status: 302 
+    }
   },
 })
 

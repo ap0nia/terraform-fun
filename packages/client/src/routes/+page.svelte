@@ -3,8 +3,6 @@
   import type { PageData } from "./$types";
 
   export let data: PageData;
-
-  $: console.log(data);
 </script>
 
 <div class="flex flex-col gap-8 p-4">
