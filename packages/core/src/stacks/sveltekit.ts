@@ -243,7 +243,7 @@ export class SvelteKitStack extends cdktf.TerraformStack {
          * @link https://github.com/hashicorp/terraform-provider-aws/issues/17989
          * Bug: if it's hashed, will always refresh. Which will take a long time because of CloudFront.
          */
-        // sourceCodeHash: lambdaAtEdgeAsset.assetHash,
+        sourceCodeHash: lambdaAtEdgeAsset.assetHash,
 
         /**
          * dev-intended strat: don't destroy ???
