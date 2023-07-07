@@ -12,6 +12,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   const repos = await octokit.rest.repos.listForUser({ 
     username: user.login,
+    type: 'all',
   })
 
   return {

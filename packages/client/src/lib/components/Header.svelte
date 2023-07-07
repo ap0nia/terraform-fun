@@ -46,15 +46,12 @@
         <form
           action="/auth/logout"
           method="POST"
-          class="bg-red-200 px-4 py-2 rounded-full"
+          class="bg-red-500 px-4 py-2 rounded-full text-white flex items-center gap-2"
         >
+          <div class="i-mdi:logout"></div>
           <button type="submit">Logout</button>
         </form>
       </div>
-    {:else}
-      <a href="/auth/login/github" class="bg-blue-200 p-4 py-2 rounded-full">
-        Login with GitHub
-      </a>
     {/if}
   </div>
 </header>

@@ -7,24 +7,32 @@
 <div class="flex flex-col gap-8 p-4">
   {#if data.repos}
     <div>
-      <h1 class="text-xl underline text-pink-500 text-center font-bold">
-        Your repositories
-      </h1>
+      <div class="my-2">
+        <h1
+          class="text-center font-extrabold text-4xl text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500"
+        >
+          Your repositories
+        </h1>
+      </div>
+
       <div class="grid xs:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {#each data.repos as repo}
           <div
-            class="bg-blue-300 rounded grid rounded hover:cursor-pointer hover:border border-pink-300"
+            class="p-4 rounded relative hover:cursor-pointer hover:border bg-gradient-to-br from-pink-300 via-purple-300 to-indigo-300"
           >
-            <div class="p-4 hover:bg-red-400" style="grid-area: 1/1">
+            <p class="font-bold text-xl" style="grid-area: 1/1">
               {repo.name}
-            </div>
-            <a
-              href="/repos/{repo.name}"
-              class="row-start-1 row-end-2 col-start-1 col-end-2"
-              style="grid-area: 1/1"
-            >
+            </p>
+
+            <a href="/repos/{repo.name}" class="absolute w-full h-full">
               &nbsp;
             </a>
+
+            <div>
+              <p>URL: {repo.url}</p>
+              <p>LICENSE: {repo.license?.name}</p>
+              <p>HOMEPAGE: {repo.homepage}</p>
+            </div>
           </div>
         {/each}
       </div>

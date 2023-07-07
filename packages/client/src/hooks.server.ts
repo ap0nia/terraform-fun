@@ -4,6 +4,7 @@ import { GitHub } from 'aponia/providers/github'
 import { sequence } from '@sveltejs/kit/hooks'
 import { createAuthHelpers } from '@aponia/sveltekit'
 import { CLIENT_ID, CLIENT_SECRET } from '$env/static/private'
+import { error, type Handle } from '@sveltejs/kit'
 
 const session = AponiaSession({
   secret: 'secret',
@@ -25,10 +26,10 @@ const github = GitHub({
     },
   },
   onAuth(user, tokens) {
-    return { 
-      user: { ...user, accessToken: tokens.access_token}, 
-      redirect: '/', 
-      status: 302 
+    return {
+      user: { ...user, accessToken: tokens.access_token },
+      redirect: '/dashboard',
+      status: 302
     }
   },
 })
@@ -38,6 +39,20 @@ const auth = AponiaAuth({
   providers: [github],
 })
 
+const authorizationHandle: Handle = async ({ event, resolve }) => {
+  if (
+    event.url.pathname.startsWith('/dashboard') ||
+    event.url.pathname.startsWith('/repos')
+  ) {
+    const user = await event.locals.getUser()
+    if (!user) {
+      throw error(401, 'Unauthorized')
+    }
+  }
+
+  return resolve(event)
+}
+
 const authenticationHandle = createAuthHelpers(auth)
 
-export const handle = sequence(authenticationHandle)
+export const handle = sequence(authenticationHandle, authorizationHandle)
