@@ -5,7 +5,7 @@
 </script>
 
 <div class="flex flex-col gap-3 p-3 items-center">
-  <h1>You're logged in as {data.user.name}</h1>
+  <h1>You're logged in as {data.user?.name}</h1>
   <div class="flex">
     <a
       href="/repos"

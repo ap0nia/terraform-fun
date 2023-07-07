@@ -25,7 +25,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     repo: params.repo,
     deployments: deployments.data,
     workflows: workflows.data,
-    crumbs: ['repos', params.repo]
   }
 }
 

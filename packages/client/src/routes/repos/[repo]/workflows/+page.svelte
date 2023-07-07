@@ -22,12 +22,12 @@
             <input type="hidden" name="workflow_id" value={workflow.id} />
           </label>
 
-          <label>
+          <label class="p-1">
             <span>Branch or Tag</span>
-            <input type="text" name="ref" class="w-full" value="main" />
+            <input type="text" name="ref" class="w-full border-2 border-red-500 rounded p-2" value="main" />
           </label>
 
-          <button type="submit" class="p-2 rounded bg-yellow-200 my-2">
+          <button class="p-2 rounded bg-yellow-200 my-2">
             Create Workflow Dispatch
           </button>
         </form>

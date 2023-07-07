@@ -28,11 +28,6 @@ declare global {
        * User parsed from session / cookies. `isAdmin` is added to the user.
        */
       user?: Aponia.User
-
-      /**
-       * Breadcrumbs
-       */
-      crumbs?: string[]
     }
   }
 }

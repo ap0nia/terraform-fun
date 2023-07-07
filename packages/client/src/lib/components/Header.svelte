@@ -2,11 +2,14 @@
   import { page } from "$app/stores";
 
   $: user = $page.data.user;
-  $: crumbs = $page.data.crumbs?.reduce((currentCrumbs, crumb) => {
-    const previousPaths = currentCrumbs.map(([, path]) => path)
-    currentCrumbs.push([crumb, [...previousPaths, crumb].join('/')])
-    return currentCrumbs
-  }, [] as [string, string][]);
+
+  $: crumbs = $page.url.pathname
+    .split("/")
+    .filter(Boolean)
+    .map((crumb, i, arr) => {
+      const href = arr.slice(0, i + 1).join("/");
+      return [crumb, href];
+    });
 </script>
 
 <header class="flex top-0 z-40 w-full border-b p-4 items-center">
@@ -28,7 +31,7 @@
       <div class="flex items-center">
         {#if crumbs}
           {#each crumbs as [crumb, href]}
-            <div class="i-mdi:slash-forward"></div>
+            <div class="i-mdi:slash-forward" />
             <div class="flex items-center">
               <a href="/{href}">{crumb}</a>
             </div>
@@ -48,7 +51,7 @@
           method="POST"
           class="bg-red-500 px-4 py-2 rounded-full text-white flex items-center gap-2"
         >
-          <div class="i-mdi:logout"></div>
+          <div class="i-mdi:logout" />
           <button type="submit">Logout</button>
         </form>
       </div>

@@ -9,7 +9,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     return {
       workflows: {
         workflows: [],
-        crumbs: ['repos', params.repo, 'workflows']
       }
     }
   }
@@ -21,7 +20,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
   return {
     workflows: workflows.data,
-    crumbs: ['repos', params.repo, 'workflows']
   }
 }
 
