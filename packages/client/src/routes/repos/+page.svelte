@@ -30,8 +30,8 @@
 
             <div>
               <p>URL: {repo.url}</p>
-              <p>LICENSE: {repo.license?.name}</p>
-              <p>HOMEPAGE: {repo.homepage}</p>
+              <p>LICENSE: {repo.licenseInfo?.name}</p>
+              <p>HOMEPAGE: {repo.homepageUrl}</p>
             </div>
           </div>
         {/each}

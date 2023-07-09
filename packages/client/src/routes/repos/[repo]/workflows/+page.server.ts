@@ -46,6 +46,8 @@ export const actions: Actions = {
      */
     const octokit = new Octokit({ auth: user.accessToken })
 
+    octokit.rest.actions.enableWorkflow
+
     await octokit.rest.actions.createWorkflowDispatch({
       owner: user.login,
       repo: event.params.repo,
