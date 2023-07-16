@@ -2,28 +2,13 @@ import path from 'node:path'
 import cdktf from "cdktf";
 import type { Construct } from "constructs";
 import aws from "@cdktf/provider-aws";
-import type {
-  CloudfrontDistributionOrderedCacheBehavior
-} from '@cdktf/provider-aws/lib/cloudfront-distribution/index.js';
-import { TerraformAsset } from "../cdktf/asset.js";
 import { getProjectDirectory } from '../utils/directories.js'
-import { stateLockingDynamodbTable, stateBucket } from "./state.js";
 import { fileTypesToContentTypes } from '../utils/fileTypes.js';
+import { stateLockingDynamodbTable, stateBucket } from "./state.js";
 
 const projectDirectory = path.join(getProjectDirectory(process.cwd()), '..', 'client')
 
-const CACHING_DISABLED_POLICY_ID = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
 const CACHING_OPTIMIZED_POLICY_ID = "658327ea-f89d-4fab-a63d-7e88639e58f6"
-const ALL_VIEWER_EXCEPT_HOST_HEADER_POLICY_ID = "b689b0a8-53d0-40ab-baf2-68738e2966ac"
-
-const staticFileBehavior: CloudfrontDistributionOrderedCacheBehavior = {
-  allowedMethods: ['GET', 'HEAD', 'OPTIONS'],
-  cachedMethods: ['GET', 'HEAD', 'OPTIONS'],
-  cachePolicyId: CACHING_OPTIMIZED_POLICY_ID,
-  viewerProtocolPolicy: 'allow-all',
-  pathPattern: '~~placeholder~~',
-  targetOriginId: '~~placeholder (S3 bucket)~~',
-}
 
 /**
  * This stack deploys a SvelteKit project to AWS.
@@ -84,7 +69,7 @@ export class SvelteKitStack extends cdktf.TerraformStack {
     /**
      * Transfer the static assets to the S3 bucket.
      */
-    const staticAssets = new TerraformAsset(
+    const staticAssets = new cdktf.TerraformAsset(
       this,
       `${name}-static-assets-bucket-contents`,
       {
@@ -133,7 +118,7 @@ export class SvelteKitStack extends cdktf.TerraformStack {
     /**
      * Create Lambda executable.
      */
-    const lambdaAsset = new TerraformAsset(
+    const lambdaAsset = new cdktf.TerraformAsset(
       this,
       `${name}-lambda-assets`,
       {
@@ -142,22 +127,6 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       }
     );
 
-    /**
-     * Create Lambda@Edge executable
-     */
-    const lambdaAtEdgeAsset = new TerraformAsset(
-      this,
-      `${name}-lambda@edge-assets`,
-      {
-        path: path.join(projectDirectory, 'build', 'lambda@edge'),
-        type: cdktf.AssetType.ARCHIVE,
-      }
-    );
-
-    /**
-     * Gives both Lambda and Lambda@Edge permission to execute in either location.
-     * Both Lambdas can execute on edge, but technically only Lambda@Edge needs to have this permission.
-     */
     const lambdaRoleDocument = new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(
       this,
       `${name}-lambda-role-policy`,
@@ -174,7 +143,6 @@ export class SvelteKitStack extends cdktf.TerraformStack {
               {
                 type: "Service",
                 identifiers: [
-                  "edgelambda.amazonaws.com",
                   "lambda.amazonaws.com",
                 ]
               }
@@ -183,7 +151,6 @@ export class SvelteKitStack extends cdktf.TerraformStack {
         ]
       }
     )
-
 
     /**
      * Create Lambda role.
@@ -225,68 +192,12 @@ export class SvelteKitStack extends cdktf.TerraformStack {
     );
 
     /**
-     * Create Lambda@Edge function.
-     */
-    const lambdaAtEdgeFunction = new aws.lambdaFunction.LambdaFunction(
-      this,
-      `${name}-lambda-at-edge`,
-      {
-        functionName: `${name}-lambda-at-edge`,
-        filename: lambdaAtEdgeAsset.path,
-        handler: 'index.handler',
-        runtime: 'nodejs18.x',
-        role: role.arn,
-        publish: true,
-
-        /**
-         * Don't hash this since it generally shouldn't be modified.
-         * @link https://github.com/hashicorp/terraform-provider-aws/issues/17989
-         * Bug: if it's hashed, will always refresh. Which will take a long time because of CloudFront.
-         */
-        sourceCodeHash: lambdaAtEdgeAsset.assetHash,
-
-        /**
-         * dev-intended strat: don't destroy ???
-         * @link https://github.com/hashicorp/terraform-provider-aws/issues/1721
-         * @link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-edge-delete-replicas.html
-         */
-        skipDestroy: true,
-      }
-    )
-
-    /**
      * Bucket shouldn't be publicly viewable, so CloudFront needs to be able to access it with an OAI.
      */
     const s3OriginAccesIdentity = new aws.cloudfrontOriginAccessIdentity.CloudfrontOriginAccessIdentity(
       this,
       `${name}-s3-origin-access-identity`,
     )
-
-    /**
-     * Create a function URL that can be used as an origin for CloudFront.
-     *
-     * {@link aws.lambdaFunctionUrl.LambdaFunctionUrl.functionUrl} is in the format:
-     *
-     * https://kcj2z34dbvosxjidwdh6i5zane0ckjvx.lambda-url.us-east-1.on.aws
-     *
-     * Need to get only domain name:
-     *
-     * kcj2z34dbvosxjidwdh6i5zane0ckjvx.lambda-url.us-east-1.on.aws
-     *
-     * @link https://github.com/aws/aws-cdk/issues/20090
-     */
-    const lambdaFunctionUrl = new aws.lambdaFunctionUrl.LambdaFunctionUrl(
-      this,
-      `${name}-lambda-function-url`,
-      {
-        functionName: lambdaFunction.functionName,
-        authorizationType: 'NONE',
-      }
-    )
-
-    const splitFunctionUrl = cdktf.Fn.split('/', lambdaFunctionUrl.functionUrl)
-
-    const functionUrlDomainName = cdktf.Fn.element(splitFunctionUrl, 2)
 
     /**
      * Create CloudFront distribution for proxying to all resources.
@@ -304,16 +215,6 @@ export class SvelteKitStack extends cdktf.TerraformStack {
               originAccessIdentity: s3OriginAccesIdentity.cloudfrontAccessIdentityPath,
             }
           },
-          {
-            originId: lambdaFunction.id,
-            domainName: functionUrlDomainName,
-            customOriginConfig: {
-              httpPort: 80,
-              httpsPort: 443,
-              originProtocolPolicy: 'https-only',
-              originSslProtocols: ['TLSv1.2'],
-            },
-          },
         ],
         viewerCertificate: {
           cloudfrontDefaultCertificate: true,
@@ -323,46 +224,13 @@ export class SvelteKitStack extends cdktf.TerraformStack {
             restrictionType: 'none'
           },
         },
-
-        /**
-         * Cache behavior for Lambda (lowest priority).
-         */
         defaultCacheBehavior: {
-          allowedMethods: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'POST', 'PATCH', 'DELETE'],
+          allowedMethods: ['GET', 'HEAD', 'OPTIONS'],
           cachedMethods: ['GET', 'HEAD', 'OPTIONS'],
-          targetOriginId: lambdaFunction.id,
-          cachePolicyId: CACHING_DISABLED_POLICY_ID,
-          originRequestPolicyId: ALL_VIEWER_EXCEPT_HOST_HEADER_POLICY_ID,
+          targetOriginId: staticAssetsBucket.id,
+          cachePolicyId: CACHING_OPTIMIZED_POLICY_ID,
           viewerProtocolPolicy: 'redirect-to-https',
-          lambdaFunctionAssociation: [
-            {
-              eventType: 'viewer-request',
-              lambdaArn: lambdaAtEdgeFunction.qualifiedArn,
-            },
-          ]
         },
-
-        /**
-         * Cache behavior for all static files (higher priority).
-         * TODO: map through all static files during build time and make a cache behavior for each.
-         */
-        orderedCacheBehavior: [
-          {
-            ...staticFileBehavior,
-            pathPattern: '_app/*',
-            targetOriginId: staticAssetsBucket.id,
-          },
-          {
-            ...staticFileBehavior,
-            pathPattern: 'favicon.png',
-            targetOriginId: staticAssetsBucket.id,
-          },
-          {
-            ...staticFileBehavior,
-            pathPattern: 'robots.txt',
-            targetOriginId: staticAssetsBucket.id,
-          }
-        ]
       },
     )
 
@@ -406,12 +274,92 @@ export class SvelteKitStack extends cdktf.TerraformStack {
       }
     )
 
+    const apiGateway = new aws.apigatewayv2Api.Apigatewayv2Api(
+      this,
+      `${name}-api-gateway`,
+      {
+        name: `${name}-api-gateway`,
+        protocolType: 'HTTP'
+      }
+    )
+
+    /**
+     * CloudFront proxy to static assets.
+     */
+    const cloudFrontIntegration = new aws.apigatewayv2Integration.Apigatewayv2Integration(
+      this,
+      `${name}-api-gateway-integration-cloudfront`,
+      {
+        apiId: apiGateway.id,
+        integrationMethod: 'ANY',
+        integrationType: 'HTTP_PROXY',
+        integrationUri: `https://${cloudfrontDistribution.domainName}/_app/{proxy}`,
+      }
+    )
+
+    /**
+     * Lambda SSR integration.
+     */
+    const lambdaIntegration = new aws.apigatewayv2Integration.Apigatewayv2Integration(
+      this,
+      `${name}-api-gateway-integration-root`,
+      {
+        apiId: apiGateway.id,
+        integrationType: 'AWS_PROXY',
+        integrationMethod: 'POST',
+        integrationUri: lambdaFunction.invokeArn,
+      }
+    )
+
+    /**
+     * Allow API Gateway to invoke the SSR Lambda.
+     */
+    new aws.lambdaPermission.LambdaPermission(
+      this,
+      `${name}-lambda-permission`,
+      {
+        action: "lambda:InvokeFunction",
+        functionName: `${name}-lambda`,
+        principal: 'apigateway.amazonaws.com',
+        sourceArn: `${apiGateway.executionArn}/*`,
+      }
+    )
+
+    new aws.apigatewayv2Route.Apigatewayv2Route(
+      this,
+      `${name}-api-gateway-route-root`,
+      {
+        routeKey: '$default',
+        apiId: apiGateway.id,
+        target: `integrations/${lambdaIntegration.id}`,
+      }
+    )
+
+    new aws.apigatewayv2Stage.Apigatewayv2Stage(
+      this,
+      `${name}-api-gateway-stage`,
+      {
+        apiId: apiGateway.id,
+        name: '$default',
+        autoDeploy: true,
+      }
+    )
+
+    new aws.apigatewayv2Route.Apigatewayv2Route(
+      this,
+      `${name}-api-gateway-route-cloudfront`,
+      {
+        routeKey: 'GET /_app/{proxy+}',
+        apiId: apiGateway.id,
+        target: `integrations/${cloudFrontIntegration.id}`,
+      }
+    )
 
     new cdktf.TerraformOutput(
       this,
       `${name}-cloudfront-domain-name`,
       {
-        value: cloudfrontDistribution.domainName,
+        value: apiGateway
       }
     )
   }

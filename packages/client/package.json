@@ -8,7 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@ap0nia/sveltekit-adapter-lambda": "^0.1.5",
+    "@ap0nia/sveltekit-adapter-lambda": "^0.1.6",
     "@ap0nia/sveltekit-adapter-node": "^0.1.5",
     "@aponia/sveltekit": "^1.0.5",
     "@octokit/auth-app": "^5.0.6",

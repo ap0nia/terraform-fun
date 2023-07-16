@@ -15,8 +15,8 @@ importers:
   packages/client:
     dependencies:
       '@ap0nia/sveltekit-adapter-lambda':
-        specifier: ^0.1.5
-        version: 0.1.5(@sveltejs/kit@1.21.0)
+        specifier: ^0.1.6
+        version: 0.1.6(@sveltejs/kit@1.21.0)
       '@ap0nia/sveltekit-adapter-node':
         specifier: ^0.1.5
         version: 0.1.5(@sveltejs/kit@1.21.0)
@@ -207,8 +207,8 @@ packages:
     resolution: {integrity: sha512-dlR6LdS+0SzOAPx/TPRhnoi7hE251OVeT2Snw0RguNbBSbjUHdWr0l3vcUUDg26rEysT89kCbtw1lVorBXLLCg==}
     dev: true
 
-  /@ap0nia/sveltekit-adapter-lambda@0.1.5(@sveltejs/kit@1.21.0):
-    resolution: {integrity: sha512-dr3oWO9/R/wObdvqemk9/zdz5bn862F7TuUXYg35dO8WtmC9Zy5YYw0ozd8xDwlP4HY62MQ51ACjkQgxuoB8gg==}
+  /@ap0nia/sveltekit-adapter-lambda@0.1.6(@sveltejs/kit@1.21.0):
+    resolution: {integrity: sha512-vCNFZbpCjajrWNIWS6oFUyGAs+bPbp6W5BEid/IY+ASFOVV6aUC+T458smyDFOZ9CzTiePkkdwNChEJS/lsuTQ==}
     peerDependencies:
       '@sveltejs/kit': ^1.0.0
     dependencies:
@@ -2749,7 +2749,7 @@ packages:
     dependencies:
       semver: 7.5.3
       shelljs: 0.8.5
-      typescript: 5.2.0-dev.20230708
+      typescript: 5.2.0-dev.20230710
     dev: false
 
   /duplexer@0.1.2:
@@ -5280,8 +5280,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  /typescript@5.2.0-dev.20230708:
-    resolution: {integrity: sha512-2qQLKn6o4SCe1BuM4TAYVogdK+od0G2rjw61On6LE0am9aFuPxtGJg2SwVlJxDwVE7p7JdCFquhVTU+enDVRtw==}
+  /typescript@5.2.0-dev.20230710:
+    resolution: {integrity: sha512-D4u4/pfdrIi94+F+iVzxzuzCk8bE/cbe4jng6Sce2Y1szj/QiBqN43X5lMrIbMR9Kb1G2AdWzYPrcNv/ButJGA==}
     engines: {node: '>=14.17'}
     hasBin: true
     dev: false
